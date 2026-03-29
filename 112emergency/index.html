@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>112 Emergency Dispatch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS for animated pulsing waveform */
+        .waveform {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 100px;
+        }
+        .waveform-bar {
+            width: 12px;
+            background-color: #06b6d4; /* cyan-500 */
+            border-radius: 9999px;
+            height: 10px;
+            transition: height 0.08s ease-in-out, background-color 0.3s;
+        }
+
+        .waveform:not(.speaking) .waveform-bar {
+            height: 10px !important;
+            background-color: #475569 !important; /* slate-600 */
+        }
+        
+        .pulse-btn {
+            animation: pulse-bg 2s infinite;
+        }
+
+        @keyframes pulse-bg {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(225, 29, 72, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen font-sans overflow-hidden flex flex-col items-center justify-center p-8">
+
+    <!-- App Container -->
+    <div id="app" class="w-full max-w-5xl text-center space-y-12">
+        
+        <!-- Header -->
+        <header class="mb-12">
+            <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-white mb-4">
+                <span class="text-rose-600">112</span> EMERGENCY
+            </h1>
+            <p class="text-2xl text-slate-400 font-mono tracking-widest uppercase">Dispatch Center</p>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main id="main-content" class="w-full min-h-[500px] flex flex-col items-center justify-center bg-slate-800/50 border-4 border-slate-700 rounded-3xl p-12 shadow-2xl relative overflow-hidden transition-all duration-300">
+            <!-- Content will be injected here by JS -->
+        </main>
+
+    </div>
+
+<script>
+    const calls = [
+      { symptoms: "I feel very hot. My face is red and the thermometer says 39 degrees!", diagnosis: "A fever", suggestedAdvice: ["You should use an ice pack.", "You shouldn't go outside."] },
+      { symptoms: "Ouch! I was cutting paper with scissors and I sliced my finger. It is bleeding!", diagnosis: "A cut", suggestedAdvice: ["You should use a band-aid.", "You should wash it."] },
+      { symptoms: "I fell off my bicycle at the park. My arm hurts so much I cannot move it!", diagnosis: "A broken arm", suggestedAdvice: ["You should go to the hospital.", "You shouldn't move it."] },
+      { symptoms: "I ate three pieces of cake, four chocolate bars, and drank two cold colas. Now my belly hurts!", diagnosis: "A stomachache", suggestedAdvice: ["You should drink mint and lemon tea.", "You shouldn't eat candy."] },
+      { symptoms: "My head is killing me! I played video games in the dark for five hours with loud music.", diagnosis: "A headache", suggestedAdvice: ["You should take a painkiller.", "You shouldn't listen to loud music."] },
+      { symptoms: "I was playing outside in the rain without a jacket. Now I am freezing and sneezing. Achoo!", diagnosis: "A cold", suggestedAdvice: ["You should stay in bed.", "You shouldn't drink cold water."] },
+      { symptoms: "I eat candy every day and I never use my toothbrush. Now the inside of my mouth hurts so much!", diagnosis: "A toothache", suggestedAdvice: ["You should go to the dentist.", "You shouldn't eat chocolate."] },
+      { symptoms: "It hurts a lot when I swallow food or drink water. My voice is changing too!", diagnosis: "A sore throat", suggestedAdvice: ["You should drink warm tea.", "You shouldn't drink cold water."] },
+      { symptoms: "I touched the hot stove while cooking dinner. My hand is red and it burns!", diagnosis: "A burn", suggestedAdvice: ["You should put it under cold water.", "You shouldn't touch hot things."] },
+      { symptoms: "I carried a very heavy bag to school today. Now my back is hurting very badly!", diagnosis: "A backache", suggestedAdvice: ["You should rest in bed.", "You shouldn't carry heavy things."] },
+      { symptoms: "I can't stop coughing! I have been coughing all night and my chest hurts.", diagnosis: "A cough", suggestedAdvice: ["You should take some cough syrup.", "You shouldn't go to school."] },
+      { symptoms: "My nose started bleeding suddenly while I was playing basketball!", diagnosis: "A bleeding nose", suggestedAdvice: ["You should hold your nose and sit down.", "You shouldn't run."] },
+      { symptoms: "My ear hurts deep inside. I cannot hear very well with my left ear!", diagnosis: "An earache", suggestedAdvice: ["You should see a doctor.", "You shouldn't listen to loud music."] },
+      { symptoms: "A bee stung my hand at the picnic! It is swollen and it hurts a lot.", diagnosis: "A bee sting", suggestedAdvice: ["You should put some ice on it.", "You shouldn't scratch it."] },
+      { symptoms: "I played in the tall grass and now my arms are very red and itchy!", diagnosis: "A rash", suggestedAdvice: ["You should use some cream.", "You shouldn't scratch your skin."] }
+    ];
+
+    const mainContent = document.getElementById('main-content');
+    
+    // State
+    const ALL_ACCENTS = ['en-US', 'en-GB']; // Restricted to standard American and British for A1/A2 learners
+    let availableAccents = [...ALL_ACCENTS];
+    let availableCalls = [...calls];
+    let currentCall = null;
+    let currentAccent = null;
+    let currentNativeVoice = null;
+    let isTranscriptVisible = false;
+    let synth = window.speechSynthesis;
+    let utterance = null;
+
+    // Audio Context State
+    let audioCtx = null;
+    let ringInterval = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function startRinging() {
+        initAudio();
+        function playRing() {
+            if (!audioCtx) return;
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const lfo = audioCtx.createOscillator();
+            const lfoGain = audioCtx.createGain();
+            const mainGain = audioCtx.createGain();
+
+            osc1.frequency.value = 440;
+            osc2.frequency.value = 480;
+            lfo.frequency.value = 20;
+
+            lfoGain.gain.value = 0.5;
+            lfo.connect(lfoGain);
+            lfoGain.connect(mainGain.gain);
+
+            mainGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            mainGain.gain.setTargetAtTime(0.2, audioCtx.currentTime, 0.05);
+            mainGain.gain.setTargetAtTime(0, audioCtx.currentTime + 1.8, 0.1); 
+
+            osc1.connect(mainGain);
+            osc2.connect(mainGain);
+            mainGain.connect(audioCtx.destination);
+
+            osc1.start(audioCtx.currentTime);
+            osc2.start(audioCtx.currentTime);
+            lfo.start(audioCtx.currentTime);
+
+            osc1.stop(audioCtx.currentTime + 2.0);
+            osc2.stop(audioCtx.currentTime + 2.0);
+            lfo.stop(audioCtx.currentTime + 2.0);
+        }
+
+        playRing();
+        ringInterval = setInterval(playRing, 3500);
+    }
+
+    function stopRinging() {
+        if (ringInterval) {
+            clearInterval(ringInterval);
+            ringInterval = null;
+        }
+    }
+
+    // Screens
+    function renderBootScreen() {
+        mainContent.innerHTML = `
+            <div class="w-full flex-1 flex flex-col items-center justify-center space-y-8 animate-[fadeIn_0.5s_ease-out]">
+                <p class="text-3xl text-slate-400 font-mono uppercase tracking-widest">System Offline</p>
+                <button onclick="bootSystem()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-black text-4xl py-6 px-12 rounded-2xl shadow-[0_0_30px_rgba(8,145,178,0.4)] transition-all transform hover:scale-105 uppercase tracking-wider border-4 border-cyan-400/50">
+                    Power On & Connect
+                </button>
+            </div>
+        `;
+    }
+
+    function bootSystem() {
+        // Require interaction to allow audio later
+        initAudio();
+        renderIdleScreen();
+    }
+
+    function renderIdleScreen() {
+        startRinging();
+        mainContent.innerHTML = `
+            <div class="absolute inset-0 bg-rose-900/10 pointer-events-none pulse-btn" style="border-radius: inherit; animation-duration: 3s;"></div>
+            <button onclick="startRandomCall()" class="pulse-btn relative z-10 bg-rose-600 hover:bg-rose-500 text-white font-black text-4xl md:text-5xl py-8 px-12 rounded-2xl shadow-[0_0_40px_rgba(225,29,72,0.6)] transition-all duration-300 transform hover:scale-105 uppercase tracking-wider border-4 border-rose-400/50">
+                Incoming Emergency<br><span class="text-2xl text-rose-200 mt-2 block font-medium">Click to Answer</span>
+            </button>
+        `;
+    }
+
+    function renderCallScreen() {
+        mainContent.innerHTML = `
+            <!-- Top section: Waveform and actions -->
+            <div class="w-full flex-1 flex flex-col items-center justify-center space-y-12 animate-[fadeIn_0.5s_ease-out]">
+                
+                <!-- Waveform -->
+                <div id="waveform" class="waveform speaking">
+                    <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div><div class="waveform-bar"></div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex gap-6 z-10">
+                    <button onclick="replayAudio()" class="bg-slate-700 hover:bg-slate-600 text-cyan-400 text-3xl font-bold py-4 px-8 rounded-xl border-2 border-slate-600 transition-colors flex items-center gap-3 shadow-lg">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Replay Audio
+                    </button>
+                    <button onclick="toggleTranscript()" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 text-3xl font-bold py-4 px-8 rounded-xl border-2 border-slate-600 transition-colors flex items-center gap-3 shadow-lg w-72 justify-center">
+                        <svg class="w-8 h-8 hidden" id="eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        <span id="transcript-btn-text">Show Transcript</span>
+                    </button>
+                </div>
+
+                <!-- Transcript Box -->
+                <div id="transcript-box" class="hidden w-full max-w-4xl bg-black/40 border-2 border-cyan-900/50 p-6 rounded-xl text-left shadow-inner">
+                    <p class="text-cyan-400 font-mono text-xl font-bold mb-2 uppercase tracking-wider">Caller Symptoms:</p>
+                    <p class="text-3xl text-white leading-relaxed font-medium">"${currentCall.symptoms}"</p>
+                </div>
+            </div>
+
+            <!-- Bottom action -->
+            <div class="mt-8 w-full">
+                <button onclick="showDoctorFile()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-5xl font-black py-8 rounded-2xl shadow-[0_0_30px_rgba(8,145,178,0.4)] border-4 border-cyan-400/30 transition-all hover:scale-[1.02] uppercase tracking-wider">
+                    Reveal Doctor's File
+                </button>
+            </div>
+        `;
+        document.getElementById('eye-icon').classList.remove('hidden');
+    }
+
+    function renderValidationScreen() {
+        mainContent.innerHTML = `
+            <div class="w-full h-full flex flex-col pt-4">
+                <div class="flex-1 flex flex-col justify-center space-y-8 animate-[fadeIn_0.5s_ease-out]">
+                    <!-- Diagnosis -->
+                    <div class="bg-emerald-900/30 border-4 border-emerald-500/50 p-8 rounded-2xl shadow-[0_0_40px_rgba(16,185,129,0.2)]">
+                        <h2 class="text-emerald-400 font-mono text-3xl font-bold mb-4 uppercase tracking-widest text-left border-b border-emerald-500/30 pb-4">Diagnosis</h2>
+                        <p class="text-6xl text-white font-black text-left">${currentCall.diagnosis}</p>
+                    </div>
+
+                    <!-- Advice -->
+                    <div class="bg-slate-800/80 border-4 border-slate-600/50 p-8 rounded-2xl text-left shadow-lg">
+                        <h2 class="text-cyan-400 font-mono text-3xl font-bold mb-6 uppercase tracking-widest border-b border-slate-600/50 pb-4">Suggested Advice (Should/Shouldn't)</h2>
+                        <ul class="space-y-6">
+                            ${currentCall.suggestedAdvice.map(advice => `
+                                <li class="flex items-center text-4xl text-white font-medium">
+                                    <svg class="w-10 h-10 text-emerald-500 mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    ${advice}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Next Button -->
+                <div class="mt-12">
+                    <button onclick="resetApp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-5xl font-black py-8 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] border-4 border-emerald-400/30 transition-all hover:scale-[1.02] uppercase tracking-wider flex items-center justify-center gap-4">
+                        Call Resolved <span class="text-emerald-200">✅</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Actions
+    function startRandomCall() {
+        if (availableCalls.length === 0) {
+            // Refill the pool once all calls have been handled
+            availableCalls = [...calls];
+        }
+        const randomIndex = Math.floor(Math.random() * availableCalls.length);
+        currentCall = availableCalls[randomIndex];
+        availableCalls.splice(randomIndex, 1); // Remove the picked call from the pool
+
+        // Pick specific accent for this call
+        if (availableAccents.length === 0) {
+            availableAccents = [...ALL_ACCENTS];
+        }
+        const accentIndex = Math.floor(Math.random() * availableAccents.length);
+        currentAccent = availableAccents[accentIndex];
+        availableAccents.splice(accentIndex, 1);
+
+        // Pick specific native voice fallback for this call
+        const enVoices = synth.getVoices().filter(v => v.lang.startsWith('en-'));
+        if (enVoices.length > 0) {
+            const preferredVoices = enVoices.filter(v => v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium') || v.name.includes('Zira') || v.name.includes('Mark'));
+            const voicePool = preferredVoices.length > 0 ? preferredVoices : enVoices;
+            currentNativeVoice = voicePool[Math.floor(Math.random() * voicePool.length)];
+        } else {
+            currentNativeVoice = null;
+        }
+
+        isTranscriptVisible = false;
+        
+        // Stop ringing and any current audio
+        stopRinging();
+        if (currentAudio) currentAudio.pause();
+        synth.cancel();
+
+        renderCallScreen();
+        playSymptomAudio();
+    }
+
+    let currentAudio = null;
+    let isSpeaking = false;
+    let speechJitterTimeout = null;
+
+    function startWaveformAnimation() {
+        if (isSpeaking) return; // Debounce so we don't start multiple loops
+        isSpeaking = true;
+        
+        const waveform = document.getElementById('waveform');
+        if (waveform) waveform.classList.add('speaking');
+        
+        const bars = Array.from(document.querySelectorAll('.waveform-bar'));
+        if (bars.length === 0) return;
+        
+        function animate() {
+            if (!isSpeaking) return;
+            
+            bars.forEach((bar, i) => {
+                const distanceToCenter = Math.abs(i - 3.5);
+                const maxH = 90 - (distanceToCenter * 15);
+                
+                // 15% chance to drop (word pause/syllable gap)
+                if (Math.random() < 0.15) {
+                    bar.style.height = '15px'; 
+                } else {
+                    const height = 15 + Math.random() * maxH;
+                    bar.style.height = `${height}px`;
+                }
+            });
+
+            speechJitterTimeout = setTimeout(animate, 60 + Math.random() * 40);
+        }
+        animate();
+    }
+
+    function stopWaveformAnimation() {
+        isSpeaking = false;
+        clearTimeout(speechJitterTimeout);
+        
+        const waveform = document.getElementById('waveform');
+        if (waveform) waveform.classList.remove('speaking');
+        
+        const bars = document.querySelectorAll('.waveform-bar');
+        bars.forEach(bar => bar.style.height = '10px');
+    }
+
+    function playSymptomAudio() {
+        if (!currentCall) return;
+        
+        // Stop any current audio
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+        synth.cancel();
+        stopWaveformAnimation();
+
+        // Start animation immediately before fetch completes so it feels highly responsive
+        startWaveformAnimation();
+        
+        // Use Google Translate's free TTS API with random English accents to simulate different patient voices
+        const text = encodeURIComponent(currentCall.symptoms);
+        
+        // Use the assigned accent bound to this specific call
+        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${currentAccent}&q=${text}`;
+        
+        currentAudio = new Audio(url);
+        
+        currentAudio.onended = () => {
+             stopWaveformAnimation();
+        };
+
+        currentAudio.onerror = () => {
+             // Fallback to native synthesis if blocked
+             stopWaveformAnimation();
+             playFallbackNativeTTS();
+        };
+
+        // Attempt playback
+        const playPromise = currentAudio.play();
+        if (playPromise !== undefined) {
+             playPromise.catch(error => {
+                  console.warn("Audio API blocked or failed, falling back to native TTS", error);
+                  stopWaveformAnimation();
+                  playFallbackNativeTTS();
+             });
+        }
+    }
+
+    function playFallbackNativeTTS() {
+        utterance = new SpeechSynthesisUtterance(currentCall.symptoms);
+        
+        if (currentNativeVoice) {
+            utterance.voice = currentNativeVoice;
+        }
+
+        utterance.rate = 0.9; // Slightly slower for language learners
+        
+        utterance.onstart = () => startWaveformAnimation();
+        utterance.onend = () => stopWaveformAnimation();
+        utterance.onerror = () => stopWaveformAnimation();
+
+        synth.speak(utterance);
+        
+        // Fallback for browsers with voice loading bugs
+        setTimeout(() => {
+            if (!synth.speaking) stopWaveformAnimation();
+        }, 1000);
+    }
+
+    function replayAudio() {
+        playSymptomAudio();
+    }
+
+    function toggleTranscript() {
+        isTranscriptVisible = !isTranscriptVisible;
+        const box = document.getElementById('transcript-box');
+        const btnText = document.getElementById('transcript-btn-text');
+        
+        if (isTranscriptVisible) {
+            box.classList.remove('hidden');
+            btnText.innerText = 'Hide Transcript';
+            box.classList.add('animate-[fadeIn_0.3s_ease-out]');
+        } else {
+            box.classList.add('hidden');
+            btnText.innerText = 'Show Transcript';
+            box.classList.remove('animate-[fadeIn_0.3s_ease-out]');
+        }
+    }
+
+    function showDoctorFile() {
+        if (currentAudio) currentAudio.pause();
+        synth.cancel();
+        stopWaveformAnimation();
+        renderValidationScreen();
+    }
+
+    function resetApp() {
+        if (currentAudio) currentAudio.pause();
+        synth.cancel();
+        stopWaveformAnimation();
+        currentCall = null;
+        renderIdleScreen();
+    }
+
+    // Initialize voices, helps with some browsers
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = () => synth.getVoices();
+    }
+
+    // Start UI
+    renderBootScreen();
+
+    // Keyframes for animations
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    `;
+    document.head.appendChild(style);
+
+</script>
+</body>
+</html>
