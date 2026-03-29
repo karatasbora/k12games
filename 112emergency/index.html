@@ -363,12 +363,6 @@
              stopWaveformAnimation();
         };
 
-        currentAudio.onerror = () => {
-             // Fallback to native synthesis if blocked
-             stopWaveformAnimation();
-             playFallbackNativeTTS();
-        };
-
         // Attempt playback
         const playPromise = currentAudio.play();
         if (playPromise !== undefined) {
