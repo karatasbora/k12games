@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K12 Games Portal | Bora Karataş</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loading-pulse {
+            animation: pulse-op 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-op {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans">
+    
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white p-10 shadow-lg relative overflow-hidden">
+        <div class="absolute -right-20 -top-20 opacity-10">
+            <svg class="w-96 h-96" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+        </div>
+        <div class="max-w-6xl mx-auto relative z-10">
+            <h1 class="text-5xl font-extrabold tracking-tight mb-2">My K-12 Games</h1>
+            <p class="text-indigo-200 text-xl max-w-2xl leading-relaxed">A collection of interactive, gamified HTML tools designed to aid EFL/ESL teaching in the classroom.</p>
+        </div>
+    </header>
+
+    <!-- Games Grid -->
+    <main class="max-w-6xl mx-auto p-8 mt-4">
+        
+        <div class="flex items-center justify-between mb-8 pb-4 border-b border-slate-200">
+            <h2 class="text-3xl font-bold text-slate-800">Available Applications</h2>
+        </div>
+
+        <div id="games-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Loading indicator -->
+            <div id="loading" class="col-span-full flex flex-col items-center justify-center text-indigo-500 py-20 loading-pulse">
+                <svg class="w-12 h-12 mb-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span class="text-xl font-medium tracking-wide">Loading Library...</span>
+            </div>
+        </div>
+        
+        <div id="error-container" class="mt-8"></div>
+        
+    </main>
+
+    <script>
+        // ----------------------------------------------------
+        // DIRECTORY REGISTRY
+        // Add exact subfolder names here whenever you upload a new game
+        // ----------------------------------------------------
+        const REGISTERED_GAMES = [
+            '112emergency'
+        ];
+
+        const gamesGrid = document.getElementById('games-grid');
+        const loading = document.getElementById('loading');
+        const errorContainer = document.getElementById('error-container');
+
+        async function initPortal() {
+            // First delay intentionally slightly to show off the loading animation 
+            // and give standard UI feel (in case local fetch is instantly fast)
+            await new Promise(r => setTimeout(r, 600));
+            gamesGrid.innerHTML = ''; 
+            
+            for (const folder of REGISTERED_GAMES) {
+                try {
+                    // Fetch the info.json created in the subfolders
+                    // NOTE: This fetch works perfectly on GitHub Pages but throws CORS in local "file://" scheme
+                    const response = await fetch(`${folder}/info.json`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    const gameInfo = await response.json();
+                    renderCard(gameInfo, folder);
+                } catch (err) {
+                    console.error(`Failed to load game info for folder "${folder}":`, err);
+                    
+                    // Display helpful local development warning if it fails to fetch
+                    if (window.location.protocol === 'file:') {
+                        errorContainer.innerHTML += `
+                            <div class="bg-rose-50 border-l-4 border-rose-500 p-6 rounded-r-xl text-rose-800 mb-4 shadow-sm">
+                                <h3 class="font-bold text-lg mb-2 flex items-center">
+                                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    Local File System Warning
+                                </h3>
+                                <p>Failed to load data for <strong>${folder}</strong>.</p>
+                                <p class="mt-2 text-sm text-rose-600 block">Because you opened this directly from your hard drive (file://), your web browser's strict CORS security policies are blocking the <code>fetch()</code> command from reading the local <code>info.json</code> file.<br/><br/><strong>To fix this:</strong> upload this folder to GitHub Pages, or use a local dev server (e.g. VSCode Live Server).</p>
+                            </div>
+                        `;
+                    } else {
+                        errorContainer.innerHTML += `
+                            <div class="bg-red-50 border border-red-200 p-4 rounded-xl text-red-700 mb-4">
+                                Error connecting to game manifest for folder: ${folder}
+                            </div>
+                        `;
+                    }
+                }
+            }
+        }
+
+        function renderCard(game, folderPath) {
+            const card = document.createElement('div');
+            card.className = "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(79,70,229,0.2)] hover:-translate-y-1 transition-all duration-300 flex flex-col group";
+            
+            card.innerHTML = `
+                <!-- Thumbnail Area -->
+                <div class="h-44 bg-slate-50 border-b border-slate-100 flex flex-col items-center justify-center text-7xl relative overflow-hidden group-hover:bg-indigo-50 transition-colors">
+                    <span class="z-10 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">${game.thumbnail || '🎮'}</span>
+                    <div class="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </div>
+
+                <!-- Info Area -->
+                <div class="p-8 flex-1 flex flex-col">
+                    <div class="flex items-start justify-between mb-4 gap-4">
+                        <h2 class="text-2xl font-black text-slate-800 leading-tight">${game.title}</h2>
+                        <span class="bg-indigo-100 text-indigo-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shrink-0 border border-indigo-200">${game.grade || 'All'}</span>
+                    </div>
+                    
+                    <p class="text-slate-500 mb-8 flex-1 text-sm leading-relaxed">${game.description}</p>
+                    
+                    <div class="space-y-3 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm">
+                        <div class="flex items-center text-slate-600">
+                            <svg class="w-5 h-5 mr-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                            <span class="font-bold text-slate-700 w-24">Subject:</span> ${game.subject || 'EFL'}
+                        </div>
+                        <div class="flex items-center text-slate-600">
+                            <svg class="w-5 h-5 mr-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <span class="font-bold text-slate-700 w-24">Grammar:</span> ${game.grammar || '-'}
+                        </div>
+                        <div class="flex items-center text-slate-600">
+                            <svg class="w-5 h-5 mr-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                            <span class="font-bold text-slate-700 w-24">Topic:</span> ${game.vocabulary || '-'}
+                        </div>
+                    </div>
+                    
+                    <!-- Open relative file link directly inside the folder without a backend -->
+                    <a href="${folderPath}/index.html" class="block w-full text-center bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-md shadow-indigo-600/20 active:scale-95 border-2 border-indigo-700/50 uppercase tracking-widest text-sm">
+                        ENTER GAME
+                    </a>
+                </div>
+            `;
+            
+            gamesGrid.appendChild(card);
+        }
+
+        // Boot the grid
+        initPortal();
+    </script>
+</body>
+</html>
