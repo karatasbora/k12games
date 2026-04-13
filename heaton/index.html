@@ -1,0 +1,618 @@
+<!-- Chosen Palette: Warm Sand & Slate (bg-stone-50, text-slate-800, teal-700 accents, amber-600 highlights) -->
+<!-- Application Structure Plan: The application uses a central dashboard architecture with side navigation to present J.B. Heaton's four core areas of language testing. This structure was chosen because it allows users to non-linearly explore distinct but interconnected assessment concepts (Writing, Cloze, Administration, Item Analysis). It transforms dense theoretical chapters into digestible, task-oriented views, prioritizing interaction and immediate visual feedback over linear reading. -->
+<!-- Visualization & Content Choices: Report Info: Heaton Ch 8-11 -> Goal: Compare scoring, illustrate test metrics -> Viz: Radar (Analytic Rubric), Bar (Cloze Scoring), Line (Marker Drift), Scatter (Item Analysis) -> Interaction: Tab navigation, dynamic chart toggles -> Justification: Charts instantly reveal the statistical realities of language testing theories. Canvas-based Chart.js is used to avoid SVG/Mermaid. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Testing & Evaluation Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fafaf9; 
+            color: #1e293b; 
+        }
+        .nav-item.active {
+            background-color: #0f766e; 
+            color: white;
+        }
+        .nav-item.active .icon {
+            color: white;
+        }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen overflow-hidden">
+
+    <nav class="w-full md:w-64 bg-white shadow-xl flex flex-col z-10 shrink-0">
+        <div class="p-6 border-b border-stone-200">
+            <h1 class="text-2xl font-bold text-slate-800 leading-tight">Testing & <br><span class="text-teal-700">Evaluation</span></h1>
+            <p class="text-xs text-slate-500 mt-2 font-semibold tracking-wider uppercase">J.B. Heaton Framework</p>
+        </div>
+        <div class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-2 px-4" id="nav-menu">
+                <li>
+                    <button data-target="sec-cloze" class="nav-item active w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors duration-200 text-slate-600 hover:bg-stone-100">
+                        <span class="icon text-xl mr-3">&#128466;</span>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold uppercase tracking-wider opacity-70 mb-0.5">Slides 1-3 (Ch. 9)</span>
+                            <span class="font-medium">The Cloze Procedure</span>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button data-target="sec-admin" class="nav-item w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors duration-200 text-slate-600 hover:bg-stone-100">
+                        <span class="icon text-xl mr-3">&#128193;</span>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold uppercase tracking-wider opacity-70 mb-0.5">Slides 4-6 (Ch. 10)</span>
+                            <span class="font-medium">Test Administration</span>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button data-target="sec-analysis" class="nav-item w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors duration-200 text-slate-600 hover:bg-stone-100">
+                        <span class="icon text-xl mr-3">&#128200;</span>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold uppercase tracking-wider opacity-70 mb-0.5">Slides 7-9 (Ch. 11)</span>
+                            <span class="font-medium">Item Analysis</span>
+                        </div>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto bg-stone-50 p-6 md:p-10 relative">
+        
+        <section id="sec-cloze" class="content-section block max-w-5xl mx-auto animation-fade">
+            <header class="mb-8 border-b border-stone-200 pb-4">
+                <h2 class="text-3xl font-bold text-slate-800 mb-2">The Cloze Procedure</h2>
+                <p class="text-slate-600 text-lg">Testing Overall Reading Comprehension</p>
+            </header>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 mb-8">
+                <p class="text-slate-700 leading-relaxed mb-4">
+                    <strong>Section Overview:</strong> The Cloze procedure involves deleting words from a text at regular intervals (e.g., every 7th word) and requiring the student to replace them. It is a highly reliable measure of overall language proficiency and reading comprehension. This section allows you to interact with a sample Cloze test and visualizes the statistical impact of utilizing the "Exact Word" scoring method versus the "Acceptable Word" scoring method, a key debate highlighted in Chapter 9.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col">
+                    <h3 class="text-xl font-bold text-teal-800 mb-2">The Correlation Principle (r &approx; 0.95)</h3>
+                    <p class="text-sm text-slate-600 mb-4">
+                        Heaton notes a critical psychometric finding: While "Acceptable Word" scoring yields higher absolute scores, it correlates almost perfectly with "Exact Word" scoring. <strong>Notice how the rank order of Students A through E never changes, even when you adjust the test difficulty using the demo on the right.</strong>
+                    </p>
+                    
+                    <div class="chart-container flex-1 mt-4">
+                        <canvas id="clozeBarChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Interactive Cloze Demo</h3>
+                    <p class="text-sm text-slate-600 mb-4">Select the deletion rate to see how the difficulty of the passage changes structurally. <strong>This directly impacts the simulated test scores in the chart to the left.</strong></p>
+                    
+                    <div class="flex gap-4 mb-4">
+                        <label class="flex items-center space-x-2 text-sm font-medium">
+                            <input type="radio" name="deletion" value="5" class="text-teal-600">
+                            <span>Every 5th (Hard)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-sm font-medium">
+                            <input type="radio" name="deletion" value="7" checked class="text-teal-600">
+                            <span>Every 7th (Standard)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-sm font-medium">
+                            <input type="radio" name="deletion" value="9" class="text-teal-600">
+                            <span>Every 9th (Easy)</span>
+                        </label>
+                    </div>
+
+                    <div id="cloze-text-area" class="p-4 bg-stone-100 rounded-lg leading-loose font-serif text-slate-800 border border-stone-300 flex-1">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-admin" class="content-section hidden max-w-5xl mx-auto animation-fade">
+            <header class="mb-8 border-b border-stone-200 pb-4">
+                <h2 class="text-3xl font-bold text-slate-800 mb-2">Test Administration & Marking</h2>
+                <p class="text-slate-600 text-lg">Ensuring Reliability and Standardized Conditions</p>
+            </header>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 mb-8">
+                <p class="text-slate-700 leading-relaxed mb-4">
+                    <strong>Section Overview:</strong> Even the most valid test is useless if it is administered poorly or marked inconsistently. This section focuses on the practicalities of testing environments and scorer reliability. You will explore the concept of "Marker Drift"—how a rater's severity can change over a long marking session—and review essential administrative checklists derived from Chapter 10 to ensure a standardized testing environment.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold text-teal-800 mb-4">Admin Checklist</h3>
+                    <ul class="space-y-3 text-sm text-slate-700">
+                        <li class="flex items-start">
+                            <span class="text-green-600 font-bold mr-2">&#10003;</span>
+                            Invigilation instructions clear and uniform.
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 font-bold mr-2">&#10003;</span>
+                            Acoustic conditions verified for listening tests.
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 font-bold mr-2">&#10003;</span>
+                            Candidate spacing to prevent copying.
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 font-bold mr-2">&#10003;</span>
+                            Clear instructions on guessing penalty (if any).
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 font-bold mr-2">&#10003;</span>
+                            Double-marking procedure established for essays.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Inter-Rater Reliability Comparison</h3>
+                    <p class="text-sm text-slate-600 mb-4">
+                        Heaton stresses the importance of standardized marking to combat subjective variance. Input scores from two different raters across 5 sample scripts to visualize their correlation and identify if one rater is consistently harsher or more erratic than the other.
+                    </p>
+                    
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200 mb-4 overflow-x-auto">
+                        <div class="min-w-[400px]">
+                            <div class="grid grid-cols-6 gap-2 text-center text-xs font-bold text-slate-700 mb-2">
+                                <div class="text-left">Rater Profile</div>
+                                <div>Script 1</div><div>Script 2</div><div>Script 3</div><div>Script 4</div><div>Script 5</div>
+                            </div>
+                            <div class="grid grid-cols-6 gap-2 items-center mb-2">
+                                <div class="text-sm font-medium text-teal-800">Rater A (Standard)</div>
+                                <input type="number" id="rater-a-1" value="75" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                                <input type="number" id="rater-a-2" value="60" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                                <input type="number" id="rater-a-3" value="85" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                                <input type="number" id="rater-a-4" value="50" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                                <input type="number" id="rater-a-5" value="65" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                            </div>
+                            <div class="grid grid-cols-6 gap-2 items-center">
+                                <div class="text-sm font-medium text-red-800">Rater B (Divergent)</div>
+                                <input type="number" id="rater-b-1" value="70" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                                <input type="number" id="rater-b-2" value="50" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                                <input type="number" id="rater-b-3" value="70" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                                <input type="number" id="rater-b-4" value="40" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                                <input type="number" id="rater-b-5" value="50" class="w-full p-1.5 border border-stone-300 rounded text-center text-sm focus:ring-teal-500">
+                            </div>
+                        </div>
+                        <div class="mt-3 text-right">
+                            <button id="btn-update-rater" class="bg-teal-700 text-white font-bold py-1.5 px-4 rounded text-sm hover:bg-teal-800 transition">Plot Reliability</button>
+                        </div>
+                    </div>
+
+                    <div class="chart-container flex-1 min-h-[250px]">
+                        <canvas id="markerLineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-analysis" class="content-section hidden max-w-5xl mx-auto animation-fade">
+            <header class="mb-8 border-b border-stone-200 pb-4">
+                <h2 class="text-3xl font-bold text-slate-800 mb-2">Item Analysis & Validating Tests</h2>
+                <p class="text-slate-600 text-lg">Statistical Proof of Test Efficacy</p>
+            </header>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 mb-8">
+                <p class="text-slate-700 leading-relaxed mb-4">
+                    <strong>Section Overview:</strong> How do we know a test question is actually "good"? Chapter 11 introduces the quantitative backbone of language testing: Item Analysis. This section provides an interactive environment to understand Item Facility (how easy an item is) and Item Discrimination (how well an item separates high-ability from low-ability students). You will interact with a scatter plot that maps the optimal "zone" for test items and use a dynamic calculator to compute Facility Values.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col">
+                    <h3 class="text-xl font-bold text-teal-800 mb-2">Item Analysis Calculator</h3>
+                    <p class="text-sm text-slate-600 mb-6">
+                        Enter the results from your Upper and Lower groups (typically the top 33% and bottom 33% of scorers). <strong>N</strong> represents the number of students in <em>one</em> of these groups. This ensures N is uniform for both FV and D formulas.
+                    </p>
+                    
+                    <div class="space-y-4 bg-stone-50 p-4 rounded-lg border border-stone-200 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Students in EACH Group (N)</label>
+                            <input type="number" id="calc-n" value="20" class="w-full p-2 border border-stone-300 rounded focus:ring-teal-500 focus:border-teal-500">
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Correct (Upper)</label>
+                                <input type="number" id="calc-cu" value="14" class="w-full p-2 border border-stone-300 rounded focus:ring-teal-500 focus:border-teal-500">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Correct (Lower)</label>
+                                <input type="number" id="calc-cl" value="4" class="w-full p-2 border border-stone-300 rounded focus:ring-teal-500 focus:border-teal-500">
+                            </div>
+                        </div>
+                        <button id="btn-analyze" class="w-full bg-slate-800 text-white font-bold py-2 rounded hover:bg-slate-700 transition mt-2">Analyze & Plot Item</button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                            <span class="block text-xs text-teal-800 font-semibold uppercase tracking-wide">Facility (FV)</span>
+                            <span id="calc-fv-result" class="block text-3xl font-bold text-teal-600 mt-1">0.45</span>
+                            <span id="calc-fv-status" class="block text-xs text-teal-800 mt-1 font-medium">Optimal Facility</span>
+                        </div>
+                        <div class="text-center p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                            <span class="block text-xs text-teal-800 font-semibold uppercase tracking-wide">Discrimination (D)</span>
+                            <span id="calc-d-result" class="block text-3xl font-bold text-teal-600 mt-1">0.50</span>
+                            <span id="calc-d-status" class="block text-xs text-teal-800 mt-1 font-medium">Very Good</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Item Discrimination vs. Facility</h3>
+                    <p class="text-sm text-slate-600 mb-4">
+                        Ideal items fall in the middle-right quadrant: Moderate facility (0.3 - 0.7) and high discrimination (> 0.3). <strong>Your calculated item from the panels on the left is plotted below.</strong> Use both calculators to map its exact coordinates!
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="analysisScatterChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const navItems = document.querySelectorAll('.nav-item');
+            const sections = document.querySelectorAll('.content-section');
+
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+
+                    sections.forEach(sec => {
+                        sec.classList.add('hidden');
+                        sec.classList.remove('block');
+                    });
+
+                    const targetId = item.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+                    targetSection.classList.remove('hidden');
+                    targetSection.classList.add('block');
+                });
+            });
+
+            Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+            Chart.defaults.color = '#475569';
+
+            const ctxCloze = document.getElementById('clozeBarChart').getContext('2d');
+            const clozeChart = new Chart(ctxCloze, {
+                type: 'bar',
+                data: {
+                    labels: ['Student A', 'Student B', 'Student C', 'Student D', 'Student E'],
+                    datasets: [
+                        {
+                            label: 'Exact Word Score (Max 20)',
+                            data: [18, 15, 11, 8, 4],
+                            backgroundColor: '#475569',
+                            order: 2
+                        },
+                        {
+                            label: 'Acceptable Word Score (Max 20)',
+                            data: [19, 17, 14, 12, 7],
+                            backgroundColor: '#0f766e',
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Raw Score (Out of 20)' },
+                            max: 20
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                footer: function(tooltipItems) {
+                                    // Calculate the gap to show the user
+                                    const exact = tooltipItems[0].chart.data.datasets[0].data[tooltipItems[0].dataIndex];
+                                    const acc = tooltipItems[0].chart.data.datasets[1].data[tooltipItems[0].dataIndex];
+                                    return `Score Gap: +${acc - exact} points`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Data profiles based on deletion difficulty
+            const clozeScoringData = {
+                "5": { // Hardest (Every 5th word)
+                    exact: [14, 11, 8, 5, 2],
+                    acceptable: [16, 14, 11, 8, 5]
+                },
+                "7": { // Standard (Every 7th word)
+                    exact: [18, 15, 11, 8, 4],
+                    acceptable: [19, 17, 14, 12, 7]
+                },
+                "9": { // Easiest (Every 9th word)
+                    exact: [20, 18, 15, 12, 8],
+                    acceptable: [20, 19, 17, 15, 11]
+                }
+            };
+
+            const baseTextWords = "Language testing is a crucial component of educational systems worldwide. It provides essential data to educators regarding student progress. A well constructed test not only measures learning but also shapes the teaching process. Therefore validity and reliability are paramount.".split(" ");
+            
+            function renderClozeText(rate) {
+                const container = document.getElementById('cloze-text-area');
+                let html = "";
+                baseTextWords.forEach((word, index) => {
+                    if ((index + 1) % rate === 0) {
+                        html += `<span class="inline-block w-16 h-6 border-b-2 border-slate-400 mx-1 align-bottom bg-white"></span>`;
+                    } else {
+                        html += word + " ";
+                    }
+                });
+                container.innerHTML = html;
+            }
+
+            renderClozeText(7);
+            
+            document.querySelectorAll('input[name="deletion"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const rate = parseInt(e.target.value);
+                    renderClozeText(rate);
+                    
+                    // Update the Chart based on difficulty
+                    const newData = clozeScoringData[rate.toString()];
+                    clozeChart.data.datasets[0].data = newData.exact;
+                    clozeChart.data.datasets[1].data = newData.acceptable;
+                    clozeChart.update();
+                });
+            });
+
+            const ctxMarker = document.getElementById('markerLineChart').getContext('2d');
+            const markerChart = new Chart(ctxMarker, {
+                type: 'line',
+                data: {
+                    labels: ['Script 1', 'Script 2', 'Script 3', 'Script 4', 'Script 5'],
+                    datasets: [
+                        {
+                            label: 'Rater A (Standardized)',
+                            data: [75, 60, 85, 50, 65],
+                            borderColor: '#0f766e',
+                            backgroundColor: '#0f766e',
+                            tension: 0.1,
+                            fill: false,
+                            borderWidth: 3,
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Rater B (Divergent)',
+                            data: [70, 50, 70, 40, 50],
+                            borderColor: '#b91c1c',
+                            backgroundColor: '#b91c1c',
+                            tension: 0.1,
+                            fill: false,
+                            borderWidth: 3,
+                            pointRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Score Awarded (0-100)' },
+                            min: 0, max: 100
+                        }
+                    },
+                    plugins: { legend: { position: 'bottom'} }
+                }
+            });
+
+            const btnUpdateRater = document.getElementById('btn-update-rater');
+            btnUpdateRater.addEventListener('click', () => {
+                const aData = [
+                    parseFloat(document.getElementById('rater-a-1').value) || 0,
+                    parseFloat(document.getElementById('rater-a-2').value) || 0,
+                    parseFloat(document.getElementById('rater-a-3').value) || 0,
+                    parseFloat(document.getElementById('rater-a-4').value) || 0,
+                    parseFloat(document.getElementById('rater-a-5').value) || 0
+                ];
+                const bData = [
+                    parseFloat(document.getElementById('rater-b-1').value) || 0,
+                    parseFloat(document.getElementById('rater-b-2').value) || 0,
+                    parseFloat(document.getElementById('rater-b-3').value) || 0,
+                    parseFloat(document.getElementById('rater-b-4').value) || 0,
+                    parseFloat(document.getElementById('rater-b-5').value) || 0
+                ];
+                
+                markerChart.data.datasets[0].data = aData;
+                markerChart.data.datasets[1].data = bData;
+                markerChart.update();
+            });
+
+            // Custom Plugin to draw and label the Heaton Item Analysis zones
+            const backgroundZonesPlugin = {
+                id: 'backgroundZones',
+                beforeDraw: (chart) => {
+                    const { ctx, chartArea: { top, bottom, left, right }, scales: { x, y } } = chart;
+                    ctx.save();
+
+                    const drawZone = (xMin, xMax, yMin, yMax, bgColor, textColor, text) => {
+                        const xStart = Math.max(left, x.getPixelForValue(xMin));
+                        const xEnd = Math.min(right, x.getPixelForValue(xMax));
+                        const yStart = Math.max(top, y.getPixelForValue(yMax)); 
+                        const yEnd = Math.min(bottom, y.getPixelForValue(yMin));
+
+                        if(xEnd <= xStart || yEnd <= yStart) return;
+
+                        // Draw Background
+                        ctx.fillStyle = bgColor;
+                        ctx.fillRect(xStart, yStart, xEnd - xStart, yEnd - yStart);
+
+                        // Draw Text
+                        ctx.fillStyle = textColor;
+                        ctx.font = 'bold 12px "Segoe UI", sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(text, xStart + (xEnd - xStart) / 2, yStart + (yEnd - yStart) / 2);
+                    };
+
+                    // Optimal Zone (FV 0.3-0.7, D > 0.3)
+                    drawZone(0.3, 0.7, 0.3, 1.0, 'rgba(20, 184, 166, 0.1)', 'rgba(15, 118, 110, 0.8)', 'OPTIMAL');
+                    
+                    // Too Hard (FV < 0.3)
+                    drawZone(0.0, 0.3, -0.2, 1.0, 'rgba(248, 113, 113, 0.05)', 'rgba(185, 28, 28, 0.4)', 'TOO HARD');
+                    
+                    // Too Easy (FV > 0.7)
+                    drawZone(0.7, 1.0, -0.2, 1.0, 'rgba(248, 113, 113, 0.05)', 'rgba(185, 28, 28, 0.4)', 'TOO EASY');
+                    
+                    // Poor Discrimination (FV 0.3-0.7, D < 0.2)
+                    drawZone(0.3, 0.7, -0.2, 0.2, 'rgba(248, 113, 113, 0.05)', 'rgba(185, 28, 28, 0.4)', 'POOR DISCRIMINATION');
+                    
+                    // Marginal Zone (FV 0.3-0.7, D 0.2-0.3)
+                    drawZone(0.3, 0.7, 0.2, 0.3, 'rgba(251, 191, 36, 0.1)', 'rgba(180, 83, 9, 0.8)', 'MARGINAL');
+
+                    ctx.restore();
+                }
+            };
+
+            // Initialize Scatter Chart first so calculators can update it
+            const ctxScatter = document.getElementById('analysisScatterChart').getContext('2d');
+            const analysisChart = new Chart(ctxScatter, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Your Calculated Item',
+                            data: [{x: 0.45, y: 0.50}], // Matches default UI inputs
+                            backgroundColor: function(context) {
+                                const value = context.raw;
+                                if (!value) return '#d97706';
+                                // Dynamic coloring based on Heaton's optimal zones
+                                if (value.x >= 0.3 && value.x <= 0.7 && value.y >= 0.3) {
+                                    return '#0f766e'; // Teal (Good)
+                                } else if (value.x < 0.3 || value.x > 0.7 || value.y < 0.2) {
+                                    return '#b91c1c'; // Red (Poor)
+                                }
+                                return '#d97706'; // Amber (Marginal)
+                            },
+                            borderColor: '#1e293b', 
+                            borderWidth: 2,
+                            pointRadius: 12,
+                            pointHoverRadius: 14,
+                            pointStyle: 'rectRot' // Diamond shape
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Item Facility (0.0 = Hard, 1.0 = Easy)' },
+                            min: 0, max: 1
+                        },
+                        y: {
+                            title: { display: true, text: 'Item Discrimination Index' },
+                            min: -0.2, max: 1
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Your Item - FV: ${context.parsed.x.toFixed(2)}, ID: ${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        },
+                        legend: { display: false }
+                    }
+                },
+                plugins: [backgroundZonesPlugin]
+            });
+
+            const btnAnalyze = document.getElementById('btn-analyze');
+            btnAnalyze.addEventListener('click', () => {
+                const n = parseFloat(document.getElementById('calc-n').value);
+                const cu = parseFloat(document.getElementById('calc-cu').value);
+                const cl = parseFloat(document.getElementById('calc-cl').value);
+                
+                if(isNaN(n) || isNaN(cu) || isNaN(cl) || n <= 0) return;
+                
+                // Keep correctly answered bounds within N
+                const safeCu = Math.min(Math.max(cu, 0), n);
+                const safeCl = Math.min(Math.max(cl, 0), n);
+                
+                // Heaton's Formula implementations using Upper/Lower Groups
+                let fv = (safeCu + safeCl) / (2 * n);
+                let d = (safeCu - safeCl) / n;
+                
+                const fvResultSpan = document.getElementById('calc-fv-result');
+                const fvStatusSpan = document.getElementById('calc-fv-status');
+                const dResultSpan = document.getElementById('calc-d-result');
+                const dStatusSpan = document.getElementById('calc-d-status');
+                
+                fvResultSpan.innerText = fv.toFixed(2);
+                dResultSpan.innerText = d.toFixed(2);
+                
+                // Update FV Status
+                if (fv < 0.3) {
+                    fvStatusSpan.innerText = "Too Difficult";
+                    fvStatusSpan.className = "block text-xs text-red-700 mt-1 font-medium";
+                } else if (fv > 0.7) {
+                    fvStatusSpan.innerText = "Too Easy";
+                    fvStatusSpan.className = "block text-xs text-amber-700 mt-1 font-medium";
+                } else {
+                    fvStatusSpan.innerText = "Optimal Facility";
+                    fvStatusSpan.className = "block text-xs text-teal-800 mt-1 font-medium";
+                }
+
+                // Update D Status
+                if (d >= 0.4) {
+                    dStatusSpan.innerText = "Very Good";
+                    dStatusSpan.className = "block text-xs text-teal-800 mt-1 font-medium";
+                } else if (d >= 0.3) {
+                    dStatusSpan.innerText = "Reasonably Good";
+                    dStatusSpan.className = "block text-xs text-teal-700 mt-1 font-medium";
+                } else if (d >= 0.2) {
+                    dStatusSpan.innerText = "Marginal Item";
+                    dStatusSpan.className = "block text-xs text-amber-700 mt-1 font-medium";
+                } else {
+                    dStatusSpan.innerText = "Poor Item";
+                    dStatusSpan.className = "block text-xs text-red-700 mt-1 font-medium";
+                }
+
+                // Update Chart Coordinates
+                analysisChart.data.datasets[0].data[0] = { x: fv, y: d };
+                analysisChart.update();
+            });
+
+        });
+    </script>
+</body>
+</html>
