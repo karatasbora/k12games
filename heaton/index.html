@@ -1,0 +1,2429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heaton Active Testing Lab: Academic Sketch</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+    <style>
+        :root {
+            /* Hand-Drawn Academic Sketch Theme */
+            --bg-paper: #faf9f6;
+            --ink-black: #1c1917;
+            --ink-light: #57534e;
+            --ink-faint: #d6d3d1;
+
+            --accent-orange: #ea580c;
+            --accent-orange-light: rgba(234, 88, 12, 0.15);
+            --danger-red: #dc2626;
+            --success-green: #16a34a;
+
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            /* Sketch styling variables */
+            --sketch-border: 2px solid var(--ink-black);
+            --sketch-shadow: 4px 4px 0px var(--ink-black);
+            --sketch-border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-paper);
+            /* Stippling noise texture overlay */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+            color: var(--ink-black);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- GLOBAL NAVIGATION --- */
+        .kb-sidebar {
+            width: 280px;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            background: transparent;
+            border-right: var(--sketch-border);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .kb-brand {
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--ink-black);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .kb-nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .kb-nav-item {
+            padding: 0.75rem 1rem;
+            color: var(--ink-light);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .kb-nav-item:hover {
+            color: var(--ink-black);
+            transform: translateX(4px);
+        }
+
+        .kb-nav-item.active {
+            color: var(--ink-black);
+            background: var(--accent-orange-light);
+            border: var(--sketch-border);
+            border-radius: var(--sketch-border-radius);
+            box-shadow: 2px 2px 0px var(--ink-black);
+            font-weight: 800;
+        }
+
+        /* --- MAIN VIEWPORT & SPA ROUTING --- */
+        .kb-main-content {
+            flex: 1;
+            padding: 4rem 5rem;
+            max-width: 1400px;
+            position: relative;
+        }
+
+        .kb-route-view {
+            display: none;
+            flex-direction: column;
+            gap: 2rem;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .kb-route-view.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- TYPOGRAPHY --- */
+        header .subtitle {
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            color: var(--accent-orange);
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            border-bottom: 4px solid var(--ink-black);
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--ink-light);
+            max-width: 800px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* --- SHARED COMPONENTS --- */
+        .kb-module-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        .kb-glass-panel {
+            background: #fff;
+            border: var(--sketch-border);
+            border-radius: var(--sketch-border-radius);
+            padding: 2.5rem;
+            box-shadow: var(--sketch-shadow);
+            position: relative;
+        }
+
+        .kb-controls-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .kb-controls-title::before {
+            content: '×';
+            color: var(--accent-orange);
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .kb-control-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kb-control-group label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--ink-black);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kb-control-value {
+            color: var(--accent-orange);
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        /* Inputs */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: var(--ink-black);
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 12px;
+            background: #fff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -8px;
+            border: 2px solid var(--ink-black);
+            border-radius: 2px;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: var(--accent-orange);
+        }
+
+        button.kb-action-btn {
+            background: #fff;
+            border: var(--sketch-border);
+            color: var(--ink-black);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--sketch-border-radius);
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            box-shadow: 2px 2px 0px var(--ink-black);
+            transition: all 0.1s;
+        }
+
+        button.kb-action-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--ink-black);
+        }
+
+        button.kb-action-btn:hover {
+            background: var(--accent-orange-light);
+        }
+
+        /* Readouts */
+        .kb-readout-card {
+            border: var(--sketch-border);
+            background: #fff;
+            border-radius: var(--sketch-border-radius);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: var(--sketch-shadow);
+        }
+
+        .kb-formula-display {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            font-weight: 800;
+            text-align: center;
+            margin: 1rem 0;
+            color: var(--ink-black);
+            border: 2px dashed var(--ink-black);
+            padding: 0.5rem;
+        }
+
+        .kb-stat-large {
+            text-align: center;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .kb-stat-large .value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--ink-black);
+            line-height: 1.1;
+        }
+
+        .kb-stat-large .value.warning {
+            color: var(--accent-orange);
+        }
+
+        .kb-stat-large .value.success {
+            color: var(--success-green);
+        }
+
+        .kb-stat-large .value.danger {
+            color: var(--danger-red);
+        }
+
+        .kb-stat-large .label {
+            font-size: 0.75rem;
+            color: var(--ink-light);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 0.5rem;
+            font-weight: 800;
+        }
+
+
+        /* --- MOD 4.8 SET THEORY MATRIX --- */
+        .set-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .set-pool {
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            border: 2px dashed var(--ink-black);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .set-label {
+            position: absolute;
+            top: -30px;
+            font-weight: 800;
+            color: var(--ink-black);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .node-target {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #fff;
+            border: var(--sketch-border);
+            color: var(--ink-black);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            z-index: 10;
+            box-shadow: var(--sketch-shadow);
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+        }
+
+        .node-var {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #fff;
+            border: var(--sketch-border);
+            color: var(--accent-orange);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            transition: all 0.5s ease;
+            font-family: var(--font-mono);
+            box-shadow: 2px 2px 0px var(--ink-black);
+        }
+
+        /* --- MOD 4.9 INDETERMINACY BOX --- */
+        .bb-layout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .bb-flows {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .flow-line {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--ink-black);
+        }
+
+        .flow-line::after {
+            content: '→';
+            color: var(--accent-orange);
+            font-weight: 800;
+        }
+
+        .black-box {
+            width: 250px;
+            height: 250px;
+            background: #fff;
+            border: 4px solid var(--ink-black);
+            border-radius: var(--sketch-border-radius);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 8px 8px 0px var(--ink-black);
+            transition: all 0.3s ease;
+            position: relative;
+            background-image: repeating-linear-gradient(45deg, var(--ink-faint) 25%, transparent 25%, transparent 75%, var(--ink-faint) 75%, var(--ink-faint)), repeating-linear-gradient(45deg, var(--ink-faint) 25%, #ffffff 25%, #ffffff 75%, var(--ink-faint) 75%, var(--ink-faint));
+            background-position: 0 0, 10px 10px;
+            background-size: 20px 20px;
+        }
+
+        .black-box::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: var(--sketch-border-radius);
+            z-index: 1;
+        }
+
+        .black-box.success {
+            border-color: var(--success-green);
+        }
+
+        .black-box.failure {
+            border-color: var(--danger-red);
+        }
+
+        .bb-title {
+            font-size: 0.8rem;
+            color: var(--ink-black);
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            position: absolute;
+            top: 1rem;
+            z-index: 2;
+            background: #fff;
+            padding: 0 0.5rem;
+            border: 2px solid var(--ink-black);
+        }
+
+        .bb-output {
+            font-family: var(--font-mono);
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--ink-black);
+            z-index: 2;
+            background: #fff;
+            padding: 0.5rem 1rem;
+            border: 3px solid var(--ink-black);
+            transform: rotate(-2deg);
+            box-shadow: 4px 4px 0px var(--ink-black);
+        }
+
+        .black-box.success .bb-output {
+            color: var(--success-green);
+        }
+
+        .black-box.failure .bb-output {
+            color: var(--danger-red);
+        }
+
+        .mask-card {
+            border: var(--sketch-border);
+            border-radius: var(--sketch-border-radius);
+            padding: 1rem;
+            width: 100%;
+            box-shadow: 2px 2px 0px var(--ink-black);
+            background: #fff;
+            position: relative;
+        }
+
+        /* Mod 4.10 array */
+        .kb-chart-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            border: var(--sketch-border);
+            border-radius: var(--sketch-border-radius);
+            background: #fff;
+        }
+
+        .kb-chart-container canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Mod 4.11 Algo List */
+        .algo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        .algo-step {
+            background: #fff;
+            border: var(--sketch-border);
+            border-radius: var(--sketch-border-radius);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 2px 2px 0px var(--ink-black);
+        }
+
+        .algo-step-header {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--ink-black);
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .kb-tooltip {
+            position: absolute;
+            background: #fff;
+            padding: 0.75rem;
+            border: var(--sketch-border);
+            border-radius: var(--sketch-border-radius);
+            pointer-events: none;
+            opacity: 0;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 800;
+            box-shadow: var(--sketch-shadow);
+            z-index: 10;
+            transform: translate(-50%, -120%);
+            margin-top: -10px;
+        }
+
+        .kb-toggle-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .kb-toggle {
+            background: #fff;
+            border: var(--sketch-border);
+            color: var(--ink-black);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--sketch-border-radius);
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 2px 2px 0px var(--ink-black);
+            text-transform: uppercase;
+        }
+
+        .kb-toggle:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--ink-black);
+        }
+
+        .kb-toggle.active {
+            color: #fff;
+            background: var(--accent-orange);
+        }
+
+        /* --- PERSONA VISUALIZATION --- */
+        .kb-persona-selector {
+            margin-top: 3rem;
+            border-top: 2px dashed var(--ink-faint);
+            padding-top: 2rem;
+        }
+
+        .kb-persona-title {
+            font-size: 0.75rem;
+            color: var(--ink-black);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .kb-persona-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .kb-persona-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: transparent;
+            border: 2px solid transparent;
+            color: var(--ink-light);
+            padding: 0.75rem;
+            border-radius: var(--sketch-border-radius);
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            width: 100%;
+        }
+
+        .kb-persona-btn:hover {
+            color: var(--ink-black);
+            transform: translateX(2px);
+        }
+
+        .kb-persona-btn.active {
+            color: var(--ink-black);
+            background: #fff;
+            border: var(--sketch-border);
+            box-shadow: 2px 2px 0px var(--ink-black);
+        }
+
+        .kb-persona-btn.active .kb-persona-avatar {
+            border-color: var(--accent-orange);
+            color: var(--accent-orange);
+            background: var(--accent-orange-light);
+        }
+
+        .kb-persona-avatar {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            background: #fff;
+            border: 2px solid var(--ink-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .kb-persona-avatar svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .kb-persona-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kb-persona-name {
+            font-size: 0.95rem;
+            line-height: 1.1;
+        }
+
+        .kb-persona-desc {
+            font-size: 0.65rem;
+            font-weight: 600;
+            opacity: 0.8;
+            font-family: var(--font-mono);
+            margin-top: 0.25rem;
+        }
+
+        .persona-label-inject {
+            color: var(--accent-orange);
+            font-weight: 800;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+        }
+
+        /* --- MASTERCLASS BUTTON (In-Lab) --- */
+        .kb-mc-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--ink-black);
+            color: #fff;
+            border: 2px solid var(--ink-black);
+            padding: 0.5rem 1.25rem;
+            border-radius: var(--sketch-border-radius);
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            box-shadow: 3px 3px 0px var(--accent-orange);
+            transition: all 0.15s ease;
+            margin-top: 1rem;
+            font-family: var(--font-sans);
+        }
+
+        .kb-mc-trigger:hover {
+            background: var(--accent-orange);
+            border-color: var(--accent-orange);
+            box-shadow: 3px 3px 0px var(--ink-black);
+        }
+
+        .kb-mc-trigger:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--ink-black);
+        }
+
+        .kb-mc-trigger svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* --- MASTERCLASS SECTION (In-Place) --- */
+        #sec-masterclass {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            animation: mcFadeIn 0.4s ease-out;
+        }
+
+        #sec-masterclass.active {
+            display: flex;
+        }
+
+        .kb-mc-header {
+            padding: 1.5rem 0;
+            border-bottom: 3px solid var(--ink-black);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .kb-mc-header-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .kb-mc-section-tag {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent-orange);
+            font-family: var(--font-mono);
+        }
+
+        .kb-mc-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin: 0;
+        }
+
+        .kb-mc-close-btn {
+            background: #fff;
+            border: var(--sketch-border);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--sketch-shadow);
+            flex-shrink: 0;
+        }
+
+        .kb-mc-close-btn:hover {
+            background: var(--accent-orange-light);
+            transform: rotate(90deg);
+        }
+
+        /* Carousel */
+        .kb-mc-carousel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0 2.5rem 2.5rem;
+        }
+
+        /* Nav pills */
+        .kb-mc-nav {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1.5rem 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .kb-mc-pill {
+            background: #fff;
+            border: var(--sketch-border);
+            padding: 0.35rem 0.85rem;
+            border-radius: var(--sketch-border-radius);
+            font-weight: 800;
+            font-size: 0.75rem;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px var(--ink-black);
+            transition: all 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--ink-light);
+        }
+
+        .kb-mc-pill:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0;
+        }
+
+        .kb-mc-pill.active {
+            background: var(--ink-black);
+            color: #fff;
+            box-shadow: 2px 2px 0px var(--accent-orange);
+            border-color: var(--ink-black);
+        }
+
+        /* Slide card */
+        .kb-mc-slide {
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: mcFadeIn 0.25s ease forwards;
+        }
+
+        .kb-mc-slide.active {
+            display: flex;
+        }
+
+        @keyframes mcFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Slide hero (full-bleed image + text overlay) ── */
+        .kb-mc-slide-hero {
+            position: relative;
+            width: 100%;
+            height: 650px;
+            background: #fff;
+            border: var(--sketch-border);
+            border-radius: var(--sketch-border-radius);
+            box-shadow: var(--sketch-shadow);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .kb-mc-slide-hero img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Top-left badges */
+        .kb-mc-badge-row {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 3;
+        }
+
+        .kb-mc-badge {
+            background: var(--ink-black);
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.3rem 0.65rem;
+            border-radius: 2px;
+        }
+
+        .kb-mc-badge.accent {
+            background: var(--accent-orange);
+        }
+
+        /* Speaker Notes */
+        .kb-mc-notes-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kb-mc-notes-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            padding: 0.7rem 1rem;
+            background: #fff;
+            border: var(--sketch-border);
+            border-radius: var(--sketch-border-radius);
+            font-weight: 800;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-family: var(--font-mono);
+            box-shadow: var(--sketch-shadow);
+            transition: background 0.1s;
+            user-select: none;
+        }
+
+        .kb-mc-notes-toggle:hover {
+            background: var(--accent-orange-light);
+        }
+
+        .kb-mc-notes-chevron {
+            margin-left: auto;
+            display: inline-block;
+            transition: transform 0.25s;
+            font-size: 0.65rem;
+        }
+
+        .kb-mc-notes-chevron.open {
+            transform: rotate(180deg);
+        }
+
+        .kb-mc-notes-content {
+            display: none;
+            padding: 1.25rem 1.5rem;
+            font-size: 0.875rem;
+            line-height: 1.8;
+            color: var(--ink-black);
+            background: #fff;
+            border: var(--sketch-border);
+            border-top: none;
+            border-radius: 0 0 var(--sketch-border-radius) var(--sketch-border-radius);
+            max-height: 280px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--ink-black) transparent;
+        }
+
+        .kb-mc-notes-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .kb-mc-notes-content::-webkit-scrollbar-thumb {
+            background: var(--ink-black);
+        }
+
+        .kb-mc-notes-content.open {
+            display: block;
+        }
+
+        .kb-mc-notes-content p+p {
+            margin-top: 0.75em;
+        }
+
+        /* ── Annotation callout labels on the image ── */
+        .kb-ann {
+            position: absolute;
+            z-index: 10;
+            pointer-events: none;
+            animation: annPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes annPop {
+            from {
+                opacity: 0;
+                transform: scale(0.7);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .kb-ann-bubble {
+            background: var(--ink-black);
+            color: #fff;
+            padding: 0.6rem 1.1rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            font-weight: 700;
+            line-height: 1.4;
+            max-width: 280px;
+            text-align: center;
+            white-space: nowrap;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+        }
+
+        .kb-ann-bubble.orange {
+            background: var(--accent-orange);
+        }
+
+        .kb-ann-bubble.white {
+            background: #fff;
+            color: var(--ink-black);
+            border: 2px solid var(--ink-black);
+        }
+
+        .kb-ann-label {
+            display: block;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.85;
+            margin-bottom: 0.25rem;
+        }
+
+        .kb-ann-text {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 800;
+            line-height: 1.2;
+            white-space: normal;
+        }
+
+        /* connector line drawn via SVG overlay */
+        .kb-ann-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9;
+            overflow: visible;
+        }
+
+        .kb-mc-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .kb-mc-nav-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .kb-mc-nav-arrow-btn {
+            background: #fff;
+            border: var(--sketch-border);
+            padding: 0.5rem 0.85rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 2px 2px 0px var(--ink-black);
+            text-transform: uppercase;
+        }
+
+        .kb-mc-nav-arrow-btn:hover:not(:disabled) {
+            background: var(--accent-orange-light);
+        }
+
+        .kb-mc-nav-arrow-btn:active:not(:disabled) {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px var(--ink-black);
+        }
+
+        .kb-mc-nav-arrow-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .kb-mc-pills {
+            display: none;
+        }
+
+        .kb-mc-nav-arrows {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar Navigation -->
+    <nav class="kb-sidebar">
+        <div class="kb-brand">Heaton Lab</div>
+        <ul class="kb-nav-list" id="global-nav">
+            <li class="kb-nav-item" data-route="sec-4-8">Word Changes</li>
+            <li class="kb-nav-item" data-route="sec-4-9">Broken Sentences</li>
+            <li class="kb-nav-item active" data-route="sec-4-10">Matching Tasks</li>
+            <li class="kb-nav-item" data-route="sec-4-11">Combining Sentences</li>
+        </ul>
+
+        <div class="kb-persona-selector">
+            <div class="kb-persona-title">Active Subject</div>
+            <div class="kb-persona-list" id="persona-container">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="kb-main-content">
+
+        <!-- SECTION 4.8: TYPE II ERROR MATRIX -->
+        <section id="sec-4-8" class="kb-route-view">
+            <header>
+                <div class="subtitle">Section 4.8 / Word Changes</div>
+                <h1>Vocabulary Penalty Risk</h1>
+                <p>When tests only accept one specific word as an answer, students with larger vocabularies are actually
+                    more likely to fail even if their answer is grammatically correct.</p>
+                <button class="kb-mc-trigger" data-section="sec-4-8" id="mc-btn-4-8">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <polyline points="8 21 12 17 16 21" />
+                    </svg>
+                    Masterclass Slaytları
+                </button>
+            </header>
+            <div class="kb-module-grid">
+                <aside class="kb-glass-panel">
+                    <div class="kb-controls-title">Lexicon Variables</div>
+
+                    <div class="kb-control-group">
+                        <label><span class="persona-name-inject">Student</span>'s Valid Set Size (|V|) <span
+                                class="kb-control-value" id="val-vset">1</span></label>
+                        <input type="range" id="slider-vset" min="1" max="10" value="1" step="1">
+                        <p
+                            style="font-size: 0.75rem; color: var(--ink-light); font-weight: 600; margin-top: 0.5rem; line-height: 1.4;">
+                            Number of grammatically flawless lexemes <span class="persona-name-inject">the
+                                student</span> can correctly produce for the given syntactic slot.</p>
+                    </div>
+
+                    <div class="kb-control-group">
+                        <label>Target Word Obscurity <span class="kb-control-value" id="val-obscure">1.0</span></label>
+                        <input type="range" id="slider-obscure" min="1" max="10" value="1" step="0.5">
+                        <p
+                            style="font-size: 0.75rem; color: var(--ink-light); font-weight: 600; margin-top: 0.5rem; line-height: 1.4;">
+                            How rare or difficult the teacher's target word is (1 = Obvious, 10 = Obscure).</p>
+                    </div>
+
+                    <div class="kb-control-group">
+                        <label>Zipf-Mandelbrot α (Decay) <span class="kb-control-value"
+                                id="val-alpha">1.0</span></label>
+                        <input type="range" id="slider-alpha" min="0.5" max="3.0" value="1.0" step="0.1">
+                    </div>
+
+                    <div class="kb-control-group">
+                        <label>Zipf-Mandelbrot β (Flatness) <span class="kb-control-value"
+                                id="val-beta">0.0</span></label>
+                        <input type="range" id="slider-beta" min="0" max="10" value="0.0" step="0.5">
+                    </div>
+
+                    <div class="kb-readout-card" style="display:block;">
+                        <div
+                            style="font-size: 0.75rem; color: var(--ink-black); font-weight: 800; text-align: center; text-transform: uppercase;">
+                            Unfair Penalty Risk</div>
+                        <div class="kb-formula-display" style="font-size: 0.85rem; padding: 0.5rem;">$$ \text{Risk} = 1
+                            - \frac{w_T}{\sum w_i} \,,\, w_i = \frac{1}{(i + \beta)^\alpha} $$</div>
+                        <div class="kb-stat-large">
+                            <div>
+                                <div class="value warning" id="stat-type-ii">0%</div>
+                                <div class="label">Chance of Unfair Marking</div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                <section class="kb-glass-panel">
+                    <div class="set-container">
+                        <div class="set-pool" id="v-set-pool">
+                            <div class="set-label"><span class="persona-name-inject">Student</span>'s Valid Set (V)
+                            </div>
+                            <div class="node-target">T</div>
+                        </div>
+                    </div>
+                    <p
+                        style="text-align: center; color: var(--ink-black); font-family: var(--font-mono); font-weight: 800; margin-top: 1rem;">
+                        Teacher's Target (T) vs <span class="persona-name-inject">Student</span>'s Divergent (v)</p>
+                </section>
+            </div>
+        </section>
+
+        <!-- SECTION 4.9: COMPENSATORY MASKING SIMULATOR -->
+        <section id="sec-4-9" class="kb-route-view">
+            <header>
+                <div class="subtitle">Section 4.9 / Broken Sentences</div>
+                <h1>Compensatory Masking Simulator</h1>
+                <p>Observe how drastically different student traits (Lexical, Syntactic, Morphological) alongside
+                    test-wiseness (ε) can stack together to cross a success threshold, actively hiding skill deficits
+                    from the teacher.</p>
+                <button class="kb-mc-trigger" data-section="sec-4-9" id="mc-btn-4-9">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <polyline points="8 21 12 17 16 21" />
+                    </svg>
+                    Masterclass Slaytları
+                </button>
+            </header>
+            <div class="kb-glass-panel flex-col" style="padding: 2rem;">
+                <div class="kb-formula-display"
+                    style="font-size:1.1rem; margin-bottom: 2rem; border-style: solid; background: #fff; padding: 1rem;">
+                    $$ S = 3 \cdot (L^\alpha \cdot Y^\beta \cdot M^\gamma) + \varepsilon \cdot (\text{Max} -
+                    \text{Comp}) $$
+                </div>
+                <div
+                    style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom: 3px solid var(--ink-black); padding-bottom: 1rem; margin-bottom: 2rem;">
+                    <div style="font-size:1.5rem; font-weight:800; text-transform:uppercase;"><span
+                            class="persona-name-inject">Student</span>'s Simulation Matrix</div>
+                    <div style="display:flex; gap: 2rem; font-family: var(--font-mono); text-align:right;">
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--ink-light); font-weight:800;">TOTAL COMPETENCE
+                            </div>
+                            <div id="stat-total" style="font-size: 1.5rem; font-weight:800; color:var(--ink-black);">194
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--ink-light); font-weight:800;">TEST THRESHOLD
+                            </div>
+                            <div id="stat-thresh" style="font-size: 1.5rem; font-weight:800; color:var(--ink-black);">
+                                180</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.75rem; color:var(--ink-light); font-weight:800;">FINAL RESULT</div>
+                            <div id="stat-result"
+                                style="font-size: 1.5rem; font-weight:800; color:var(--success-green);">PASS (S=1)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STACKED BAR CHART AREA -->
+                <div
+                    style="position:relative; width: 100%; height: 350px; background: repeating-linear-gradient(45deg, var(--ink-faint) 25%, transparent 25%, transparent 75%, var(--ink-faint) 75%, var(--ink-faint)), repeating-linear-gradient(45deg, var(--ink-faint) 25%, #ffffff 25%, #ffffff 75%, var(--ink-faint) 75%, var(--ink-faint)); background-position: 0 0, 10px 10px; background-size: 20px 20px; border: 4px solid var(--ink-black); border-radius: var(--sketch-border-radius); display:flex; justify-content:center; align-items:flex-end; padding: 0 20%; box-shadow: 8px 8px 0px var(--ink-black); margin-bottom: 3rem; overflow:hidden;">
+
+                    <div
+                        style="position:absolute; top:1rem; width:100%; text-align:center; font-family:var(--font-mono); font-weight:800; font-size:1rem; z-index:5; background:rgba(255,255,255,0.8); display:inline-block; padding: 0.2rem;">
+                        Composite Skill (Cobb-Douglas) + ε = <span id="bar-sum-text">194</span></div>
+
+                    <!-- THRESHOLD LINE -->
+                    <div id="thresh-line"
+                        style="position:absolute; width:100%; border-top: 3px dashed var(--danger-red); left:0; bottom: 45%; z-index:4; display:flex; justify-content:flex-end; align-items:center; transition: bottom 0.2s;">
+                        <span
+                            style="background:var(--danger-red); color:#fff; font-family:var(--font-sans); font-size:0.75rem; font-weight:800; padding:0.25rem 0.5rem; border-radius:4px; margin-right: 1rem; border:2px solid var(--ink-black); transform: translateY(-50%);">SUCCESS
+                            THRESHOLD (<span id="line-thresh-val">180</span>)</span>
+                    </div>
+
+                    <!-- RESULTS BADGE ATTACHED TO BAR -->
+                    <div id="bar-result-badge"
+                        style="position:absolute; z-index:6; background: #fff; padding:0.25rem 1rem; border:3px solid var(--success-green); border-radius: var(--sketch-border-radius); color:var(--success-green); font-weight:800; font-size:0.8rem; font-family:var(--font-sans); bottom: 48.5%; box-shadow:2px 2px 0px var(--ink-black); transition: bottom 0.2s; white-space:nowrap;">
+                        <span class="persona-name-inject">Student</span>'s Result: PASS (S=1)</div>
+
+                    <!-- STACKED BARS -->
+                    <div id="bar-container"
+                        style="width: 100%; height: 100%; display:flex; flex-direction:column-reverse; justify-content:flex-start; z-index:3;">
+                        <div id="box-l"
+                            style="background:#60a5fa; width:100%; height:12.75%; display:flex; justify-content:center; align-items:center; color:#fff; font-weight:800; font-size:0.8rem; overflow:hidden; transition: height 0.2s;">
+                            Lexical</div>
+                        <div id="box-y"
+                            style="background:#86efac; width:100%; height:25%; display:flex; justify-content:center; align-items:center; color:#1c1917; font-weight:800; font-size:0.8rem; overflow:hidden; transition: height 0.2s;">
+                            Syntactic</div>
+                        <div id="box-m"
+                            style="background:#fbbf24; width:100%; height:7%; display:flex; justify-content:center; align-items:center; color:#1c1917; font-weight:800; font-size:0.8rem; overflow:hidden; transition: height 0.2s;">
+                            Morphological</div>
+                        <div id="box-e"
+                            style="background:#f9a8d4; width:100%; height:3.75%; display:flex; justify-content:center; align-items:center; color:#1c1917; font-weight:800; font-size:0.8rem; overflow:hidden; transition: height 0.2s;">
+                            Test-Wiseness</div>
+                    </div>
+                </div>
+
+                <!-- SLIDERS -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="kb-control-group" style="margin-bottom:0;">
+                        <label><span class="persona-name-inject">Student</span>'s Lexical Knowledge (L) <span
+                                class="kb-control-value" id="val-l">51</span></label>
+                        <input type="range" id="slider-l" min="0" max="100" value="51" step="1">
+                    </div>
+                    <div class="kb-control-group" style="margin-bottom:0;">
+                        <label><span class="persona-name-inject">Student</span>'s Syntactic Mastery (Y) <span
+                                class="kb-control-value" id="val-y">100</span></label>
+                        <input type="range" id="slider-y" min="0" max="100" value="100" step="1">
+                    </div>
+                    <div class="kb-control-group" style="margin-bottom:0;">
+                        <label><span class="persona-name-inject">Student</span>'s Morphological Control (M) <span
+                                class="kb-control-value" id="val-m">28</span></label>
+                        <input type="range" id="slider-m" min="0" max="100" value="28" step="1">
+                    </div>
+                    <div class="kb-control-group" style="margin-bottom:0;">
+                        <label><span class="persona-name-inject">Student</span>'s Test-Wiseness (ε) <span
+                                class="kb-control-value" id="val-e">15%</span></label>
+                        <input type="range" id="slider-e" min="0" max="100" value="15" step="1">
+                    </div>
+                    <div class="kb-control-group" style="grid-column: 1 / -1; margin-top: 1rem;">
+                        <label>Test Weight Profile</label>
+                        <select id="select-profile"
+                            style="padding: 0.5rem; font-family: var(--font-mono); font-weight: 800; border: 2px solid var(--ink-black); border-radius: var(--sketch-border-radius); background: #fff; text-transform: uppercase;">
+                            <option value="balanced" selected>Balanced (α:⅓, β:⅓, γ:⅓)</option>
+                            <option value="grammar">Grammar Heavy (α:0.1, β:0.8, γ:0.1)</option>
+                            <option value="vocab">Vocab Heavy (α:0.8, β:0.1, γ:0.1)</option>
+                            <option value="morph">Morphology Heavy (α:0.1, β:0.1, γ:0.8)</option>
+                        </select>
+                    </div>
+                    <div class="kb-control-group"
+                        style="grid-column: 1 / -1; margin-top: 1rem; border-top: 2px dashed var(--ink-faint); padding-top: 1rem;">
+                        <label style="color:var(--danger-red);">Success Threshold <span class="kb-control-value"
+                                style="color:var(--danger-red);" id="val-thresh">180</span></label>
+                        <input type="range" id="slider-thresh" min="0" max="400" value="180" step="1">
+                    </div>
+                    <div style="grid-column: 1 / -1; margin-top:0.5rem;">
+                        <button class="kb-action-btn"
+                            onclick="document.getElementById('slider-l').value=51; document.getElementById('slider-y').value=100; document.getElementById('slider-m').value=28; document.getElementById('slider-e').value=15; document.getElementById('slider-thresh').value=180; updateMaskingSim();">Reset
+                            Profile</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4.10: MATCH ARRAYS -->
+        <section id="sec-4-10" class="kb-route-view active">
+            <header>
+                <div class="subtitle">Section 4.10 / Matching Tasks</div>
+                <h1>Matching Probabilities</h1>
+                <p>See how the chances of guessing correct answers change based on the length of the test and how
+                    attractive the wrong options (distractors) are.</p>
+                <button class="kb-mc-trigger" data-section="sec-4-10" id="mc-btn-4-10">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <polyline points="8 21 12 17 16 21" />
+                    </svg>
+                    Masterclass Slaytları
+                </button>
+            </header>
+            <div class="kb-toggle-container">
+                <button class="kb-toggle active" onclick="setMatchMode('cascade')" id="btn-cascade">Cascade Severity
+                    Risk</button>
+                <button class="kb-toggle" onclick="setMatchMode('perfect')" id="btn-perfect">Elimination
+                    Momentum</button>
+            </div>
+            <div class="kb-module-grid">
+                <aside class="kb-glass-panel">
+                    <div class="kb-controls-title">Parameters</div>
+                    <div class="kb-control-group">
+                        <label>Stimuli items (n) <span class="kb-control-value" id="val-n">10</span></label>
+                        <input type="range" id="slider-n" min="2" max="25" value="10" step="1">
+                    </div>
+                    <div class="kb-control-group">
+                        <label>Distractors (m) <span class="kb-control-value" id="val-distractors">2</span></label>
+                        <input type="range" id="slider-distractors" min="0" max="20" value="2" step="1">
+                    </div>
+                    <div class="kb-control-group">
+                        <label>Distractor Gravity (w) <span class="kb-control-value" id="val-w">1.0x</span></label>
+                        <input type="range" id="slider-w" min="1.0" max="5.0" value="1.0" step="0.1">
+                    </div>
+                    <div class="kb-control-group">
+                        <label>Distractor Variance (v) <span class="kb-control-value" id="val-v">0.5</span></label>
+                        <input type="range" id="slider-v" min="0" max="5.0" value="0.5" step="0.1">
+                    </div>
+
+                    <div class="kb-readout-card active" id="card-cascade">
+                        <div
+                            style="font-size: 0.75rem; color: var(--ink-black); font-weight:800; text-align: center; text-transform: uppercase;">
+                            Weighted Logic</div>
+                        <div class="kb-formula-display" style="font-size: 0.85rem; padding: 0.25rem;">$$ \mathbb{P}(C) =
+                            \frac{n - 1}{(n - 1) + w \cdot m} $$</div>
+                        <div class="kb-stat-large">
+                            <div>
+                                <div class="value" id="stat-cascade-p">100%</div>
+                                <div class="label">Cascade Risk</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kb-readout-card" id="card-perfect">
+                        <div
+                            style="font-size: 0.75rem; color: var(--ink-black); font-weight:800; text-align: center; text-transform: uppercase;">
+                            Sequential Elimination</div>
+                        <div class="kb-formula-display" style="font-size: 0.85rem; padding: 0.25rem;">$$
+                            \mathbb{P}(\text{Perf}) = \frac{1}{n - k + 1 + w_k \cdot m_k} $$<br>
+                            <div
+                                style="font-size:0.7rem; font-family:var(--font-sans); color:var(--ink-light); font-weight:800; letter-spacing:0.05em; text-transform:uppercase;">
+                                $w_k = w(1 + v\frac{k}{n})$</div>
+                        </div>
+                        <div class="kb-stat-large" style="gap: 1rem;">
+                            <div>
+                                <div class="value" id="stat-perfect-p">10%</div>
+                                <div class="label">P(Final|Perf)</div>
+                            </div>
+                            <div>
+                                <div class="value warning" id="stat-polluted-p">0%</div>
+                                <div class="label">P(Final|E₁)</div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                <section class="kb-glass-panel"
+                    style="padding: 1.5rem; background: transparent; box-shadow: none; border: none;">
+                    <div id="chart-title"
+                        style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; margin-left: 1rem; text-transform: uppercase; border-bottom: 2px solid var(--ink-black); display: inline-block;">
+                        <span class="persona-name-inject">Student</span>'s Chart</div>
+                    <div class="kb-chart-container">
+                        <canvas id="mathChart"></canvas>
+                        <div id="chartTooltip" class="kb-tooltip"></div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <!-- SECTION 4.11: ALGORITHMIC SYNTHESIS -->
+        <section id="sec-4-11" class="kb-route-view">
+            <header>
+                <div class="subtitle">Section 4.11 / Combining Sentences</div>
+                <h1>The Domino Effect</h1>
+                <p>Watch how asking a student to perform multiple grammatical steps in a row drastically lowers their
+                    chance of getting the final sentence completely right.</p>
+                <button class="kb-mc-trigger" data-section="sec-4-11" id="mc-btn-4-11">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <polyline points="8 21 12 17 16 21" />
+                    </svg>
+                    Masterclass Slaytları
+                </button>
+            </header>
+            <div class="kb-module-grid">
+                <aside class="kb-glass-panel">
+                    <div class="kb-controls-title"><span class="persona-name-inject">Student</span>'s Task Steps</div>
+                    <div
+                        style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 1rem; border: var(--sketch-border); border-radius: var(--sketch-border-radius); box-shadow: 2px 2px 0px var(--ink-black);">
+                        <span style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase;">Cognitive
+                            Momentum</span>
+                        <label class="switch" style="position:relative; display:inline-block; width:44px; height:24px;">
+                            <input type="checkbox" id="toggle-momentum" style="opacity:0; width:0; height:0;">
+                            <span class="slider"
+                                style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:var(--ink-faint); border-radius:24px; transition:.3s; border: 2px solid var(--ink-black);"></span>
+                            <span class="slider-dot"
+                                style="position:absolute; content:''; height:14px; width:14px; left:3px; bottom:3px; background-color:white; border-radius:50%; transition:.3s; border: 2px solid var(--ink-black);"></span>
+                        </label>
+                    </div>
+                    <div class="kb-control-group">
+                        <label>Momentum Boost (μ)<span class="kb-control-value" id="val-mu">0.5</span></label>
+                        <input type="range" id="slider-mu" min="0" max="2" value="0.5" step="0.1">
+                    </div>
+                    <div class="kb-control-group">
+                        <label>Fatigue Decay (τ)<span class="kb-control-value" id="val-tau">0.10</span></label>
+                        <input type="range" id="slider-tau" min="0" max="1" value="0.1" step="0.05">
+                    </div>
+                    <style>
+                        #toggle-momentum:checked+.slider {
+                            background-color: var(--success-green);
+                        }
+
+                        #toggle-momentum:checked~.slider-dot {
+                            transform: translateX(20px);
+                        }
+                    </style>
+                    <button class="kb-action-btn" id="btn-add-algo">+ Add Step</button>
+                    <div class="algo-list" id="algo-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </aside>
+                <section class="kb-glass-panel" style="display:flex; flex-direction:column; justify-content:center;">
+                    <div
+                        style="font-size: 0.9rem; color: var(--ink-black); font-weight:800; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2rem;">
+                        <span class="persona-name-inject">Student</span>'s Overall Chance of Success</div>
+
+                    <div class="kb-stat-large">
+                        <div>
+                            <div class="value" id="val-global-product"
+                                style="font-size: 5rem; text-decoration: underline;">90%</div>
+                            <div class="label">Flawless Execution</div>
+                        </div>
+                    </div>
+                    <div id="formula-domino"
+                        style="text-align:center; font-weight: 800; color:var(--accent-orange); margin-top:2rem;">$$
+                        \mathbb{P}(\text{Total}) = \prod_{i=1}^{m} \mathbb{P}(O_i) $$</div>
+                </section>
+            </div>
+        </section>
+
+        <section id="sec-masterclass" class="kb-route-view">
+            <div class="kb-mc-header">
+                <div class="kb-mc-header-info">
+                    <span class="kb-mc-section-tag" id="mc-tag">Section 4.10 / Matching Tasks</span>
+                    <h2 class="kb-mc-title">Masterclass Slides</h2>
+                </div>
+                <div class="kb-mc-header-actions">
+                    <div class="kb-mc-nav-group">
+                        <button class="kb-mc-nav-arrow-btn" id="mc-prev-btn">&larr; Önceki</button>
+                        <button class="kb-mc-nav-arrow-btn" id="mc-next-btn">Sonraki &rarr;</button>
+                    </div>
+                    <button class="kb-mc-close-btn" id="mc-close-btn" title="Laboratuvara D\u00f6n">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="kb-mc-body">
+                <!-- Slides Showcase Container -->
+                <div class="kb-mc-carousel" id="mc-carousel">
+                    <!-- Hero slides injected here -->
+                </div>
+
+                <!-- Pills hidden by CSS though kept in DOM for JS safety if needed -->
+                <div id="mc-pills" style="display:none;"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- 0. PERSONA INTEGRATION ---
+        const PERSONAS = {
+            'emma': {
+                id: 'emma', name: 'Emma', desc: 'The Avid Reader. High vocab, poor grammar.',
+                icon: '<svg viewBox="0 0 100 100"><circle cx="50" cy="40" r="20" fill="none" stroke="currentColor" stroke-width="6"/><path d="M20 100 C 20 60, 80 60, 80 100" fill="none" stroke="currentColor" stroke-width="6"/><path d="M40 25 Q 50 15 60 25 M30 35 Q 40 25 50 35" fill="none" stroke="currentColor" stroke-width="4"/></svg>',
+                traits: { vset: 8, l: 85, y: 30, m: 20, e: 60 },
+                algoBase: [
+                    { name: "Identify Root Clause", prob: 0.40 },
+                    { name: "Extract Subordinate Concept", prob: 0.95 },
+                    { name: "Select Correct Relative Pronoun", prob: 0.35 },
+                    { name: "Apply Syntactic Shift", prob: 0.45 }
+                ]
+            },
+            'lucas': {
+                id: 'lucas', name: 'Lucas', desc: 'The Rule Follower. Great grammar, small vocab.',
+                icon: '<svg viewBox="0 0 100 100"><circle cx="50" cy="40" r="20" fill="none" stroke="currentColor" stroke-width="6"/><path d="M20 100 C 20 60, 80 60, 80 100" fill="none" stroke="currentColor" stroke-width="6"/><rect x="35" y="30" width="12" height="8" fill="none" stroke="currentColor" stroke-width="3"/><rect x="53" y="30" width="12" height="8" fill="none" stroke="currentColor" stroke-width="3"/><line x1="47" y1="34" x2="53" y2="34" stroke="currentColor" stroke-width="3"/></svg>',
+                traits: { vset: 2, l: 20, y: 90, m: 85, e: 10 },
+                algoBase: [
+                    { name: "Identify Root Clause", prob: 0.95 },
+                    { name: "Extract Subordinate Concept", prob: 0.35 },
+                    { name: "Select Correct Relative Pronoun", prob: 0.95 },
+                    { name: "Apply Syntactic Shift", prob: 0.90 }
+                ]
+            },
+            'mia': {
+                id: 'mia', name: 'Mia', desc: 'The Baseline Student. Average in all skills.',
+                icon: '<svg viewBox="0 0 100 100"><circle cx="50" cy="40" r="20" fill="none" stroke="currentColor" stroke-width="6"/><path d="M20 100 C 20 60, 80 60, 80 100" fill="none" stroke="currentColor" stroke-width="6"/><path d="M40 30 L 60 30" fill="none" stroke="currentColor" stroke-width="4"/></svg>',
+                traits: { vset: 4, l: 50, y: 50, m: 50, e: 40 },
+                algoBase: [
+                    { name: "Identify Root Clause", prob: 0.70 },
+                    { name: "Extract Subordinate Concept", prob: 0.70 },
+                    { name: "Select Correct Relative Pronoun", prob: 0.70 },
+                    { name: "Apply Syntactic Shift", prob: 0.70 }
+                ]
+            }
+        };
+
+        let activePersona = 'emma';
+
+        function renderPersonas() {
+            const container = document.getElementById('persona-container');
+            container.innerHTML = '';
+
+            Object.values(PERSONAS).forEach(p => {
+                const btn = document.createElement('button');
+                btn.className = `kb-persona-btn ${p.id === activePersona ? 'active' : ''}`;
+                btn.innerHTML = `
+                    <div class="kb-persona-avatar">${p.icon}</div>
+                    <div class="kb-persona-info">
+                        <div class="kb-persona-name">${p.name}</div>
+                        <div class="kb-persona-desc">${p.desc}</div>
+                    </div>
+                `;
+                btn.onclick = () => setPersona(p.id);
+                container.appendChild(btn);
+            });
+        }
+
+        function setPersona(id) {
+            activePersona = id;
+            renderPersonas();
+
+            const p = PERSONAS[id];
+
+            // Inject names into UI
+            document.querySelectorAll('.persona-name-inject').forEach(el => {
+                el.textContent = p.name;
+                el.classList.add('persona-label-inject');
+            });
+            document.querySelectorAll('.persona-pronoun-inject').forEach(el => {
+                el.textContent = p.name; // simplest pronoun
+                el.classList.add('persona-label-inject');
+            });
+
+            // Update sliders to match persona traits
+            if (document.getElementById('slider-vset')) {
+                document.getElementById('slider-vset').value = p.traits.vset;
+                updateSets();
+            }
+            if (document.getElementById('slider-l')) {
+                document.getElementById('slider-l').value = p.traits.l;
+                document.getElementById('slider-y').value = p.traits.y;
+                document.getElementById('slider-m').value = p.traits.m;
+                document.getElementById('slider-e').value = p.traits.e;
+                updateMaskingSim();
+            }
+
+            // Update Algorithmic operations
+            if (typeof operations !== 'undefined') {
+                operations = p.algoBase.map(op => ({ ...op }));
+                extraStepIdx = 0; // reset
+                if (typeof updateAlgo === 'function') updateAlgo();
+            }
+        }
+
+        // --- 0.1 SPA ROUTING ENGINE ---
+        const navItems = document.querySelectorAll('.kb-nav-item');
+        const routes = document.querySelectorAll('.kb-route-view');
+        let currentActiveSectionId = 'sec-4-8';
+        let originSectionId = 'sec-4-8'; // for masterclass return
+
+        function showSection(targetId) {
+            routes.forEach(view => {
+                const isActive = view.id === targetId;
+                view.classList.toggle('active', isActive);
+                if (isActive) currentActiveSectionId = targetId;
+            });
+
+            navItems.forEach(nav => {
+                const link = nav.getAttribute('data-route');
+                nav.classList.toggle('active', link === targetId);
+            });
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const target = item.getAttribute('data-route');
+                showSection(target);
+            });
+        });
+
+        // --- 1. MOD 4.8 TYPE II ERROR SET MATRIX ---
+        const sldVSet = document.getElementById('slider-vset');
+        const valVSet = document.getElementById('val-vset');
+        const sldObscure = document.getElementById('slider-obscure');
+        const valObscure = document.getElementById('val-obscure');
+        const sldAlpha = document.getElementById('slider-alpha');
+        const valAlpha = document.getElementById('val-alpha');
+        const sldBeta = document.getElementById('slider-beta');
+        const valBeta = document.getElementById('val-beta');
+        const statType2 = document.getElementById('stat-type-ii');
+        const setPool = document.getElementById('v-set-pool');
+
+        function updateSets() {
+            const v = parseInt(sldVSet.value);
+            valVSet.textContent = v;
+
+            const obs = parseFloat(sldObscure.value);
+            valObscure.textContent = obs.toFixed(1);
+
+            const alpha = sldAlpha ? parseFloat(sldAlpha.value) : 1.0;
+            if (valAlpha) valAlpha.textContent = alpha.toFixed(1);
+
+            const beta = sldBeta ? parseFloat(sldBeta.value) : 0.0;
+            if (valBeta) valBeta.textContent = beta.toFixed(1);
+
+            const wT = 1.0 / Math.pow(obs + beta, alpha);
+            let wOthers = 0;
+            for (let i = 1; i < v; i++) {
+                wOthers += (1.0 / Math.pow(i + beta, alpha));
+            }
+
+            const pTarget = wT / (wT + wOthers);
+            const pFN = 1 - pTarget;
+            statType2.textContent = (pFN * 100).toFixed(1) + '%';
+
+            // Re-render visual nodes
+            // Keep exactly 1 target, and spawn v-1 divergers
+            setPool.innerHTML = `<div class="set-label">Grammatically Valid Set (V)</div><div class="node-target" style="left: calc(50% - 40px); top: calc(50% - 40px);">T</div>`;
+
+            if (v > 1) {
+                const numVars = v - 1;
+                const radius = 100; // Orbit radius
+                for (let i = 0; i < numVars; i++) {
+                    const angle = (i / numVars) * (Math.PI * 2) - (Math.PI / 2);
+                    // Center offset + orbit
+                    const x = (175 - 25) + Math.cos(angle) * radius;
+                    const y = (175 - 25) + Math.sin(angle) * radius;
+
+                    const el = document.createElement('div');
+                    el.className = 'node-var';
+                    el.textContent = 'v' + (i + 1);
+                    el.style.left = `${x}px`;
+                    el.style.top = `${y}px`;
+                    setPool.appendChild(el);
+                }
+            }
+        }
+        sldVSet.addEventListener('input', updateSets);
+        sldObscure.addEventListener('input', updateSets);
+        if (sldAlpha) sldAlpha.addEventListener('input', updateSets);
+        if (sldBeta) sldBeta.addEventListener('input', updateSets);
+        updateSets();
+
+        // --- 2. MOD 4.9 COMPENSATORY MASKING SIMULATOR ---
+        const sL = document.getElementById('slider-l'); const vL = document.getElementById('val-l');
+        const sY = document.getElementById('slider-y'); const vY = document.getElementById('val-y');
+        const sM = document.getElementById('slider-m'); const vM = document.getElementById('val-m');
+        const sE = document.getElementById('slider-e'); const vE = document.getElementById('val-e');
+        const sThresh = document.getElementById('slider-thresh'); const vThresh = document.getElementById('val-thresh');
+
+        const boxL = document.getElementById('box-l');
+        const boxY = document.getElementById('box-y');
+        const boxM = document.getElementById('box-m');
+        const boxE = document.getElementById('box-e');
+        const threshLine = document.getElementById('thresh-line');
+        const barResultBadge = document.getElementById('bar-result-badge');
+
+        const statTotal = document.getElementById('stat-total');
+        const statThresh = document.getElementById('stat-thresh');
+        const statResult = document.getElementById('stat-result');
+        const barSumText = document.getElementById('bar-sum-text');
+        const lineThreshVal = document.getElementById('line-thresh-val');
+
+        function updateMaskingSim() {
+            if (!sL || !sE || !sThresh) return;
+            const l = parseInt(sL.value); vL.textContent = l;
+            const y = parseInt(sY.value); vY.textContent = y;
+            const m = parseInt(sM.value); vM.textContent = m;
+            const e = parseInt(sE.value); vE.textContent = e + '%';
+            const thresh = parseInt(sThresh.value); vThresh.textContent = thresh;
+
+            const profileSelect = document.getElementById('select-profile');
+            const profile = profileSelect ? profileSelect.value : 'balanced';
+            let alpha = 1 / 3, beta = 1 / 3, gamma = 1 / 3;
+            if (profile === 'grammar') { alpha = 0.1; beta = 0.8; gamma = 0.1; }
+            else if (profile === 'vocab') { alpha = 0.8; beta = 0.1; gamma = 0.1; }
+            else if (profile === 'morph') { alpha = 0.1; beta = 0.1; gamma = 0.8; }
+
+            // Asymmetric Cobb-Douglas
+            const composite = 3 * Math.pow(l, alpha) * Math.pow(y, beta) * Math.pow(m, gamma);
+            const deficit = Math.max(0, 400 - composite);
+            const total = Math.round(composite + (deficit * (e / 100)));
+
+            statTotal.textContent = total;
+            barSumText.textContent = total;
+            statThresh.textContent = thresh;
+            lineThreshVal.textContent = thresh;
+
+            // Box relative heights
+            // Since L,Y,M are multiplicative, visual stacking represents their bottleneck contribution
+            const hComposite = (composite / 400) * 100;
+            const totalLYM = l * alpha + y * beta + m * gamma + 0.0001; // weighted contribution distribution
+            const hL = hComposite * ((l * alpha) / totalLYM); boxL.style.height = `${hL}%`; boxL.textContent = hL > 5 ? `Lexical` : ``;
+            const hY = hComposite * ((y * beta) / totalLYM); boxY.style.height = `${hY}%`; boxY.textContent = hY > 5 ? `Syntactic` : ``;
+            const hM = hComposite * ((m * gamma) / totalLYM); boxM.style.height = `${hM}%`; boxM.textContent = hM > 5 ? `Morphological` : ``;
+            const hE = ((total - composite) / 400) * 100; boxE.style.height = `${hE}%`; boxE.textContent = hE > 5 ? `Test-Wiseness` : ``;
+
+            const hThresh = (thresh / 400) * 100;
+            threshLine.style.bottom = `${hThresh}%`;
+
+            // Result Logic
+            const passed = total >= thresh;
+            if (passed) {
+                statResult.textContent = 'PASS (S=1)';
+                statResult.style.color = 'var(--success-green)';
+                barResultBadge.textContent = 'TEST RESULT: PASS (S=1)';
+                barResultBadge.style.color = 'var(--success-green)';
+                barResultBadge.style.borderColor = 'var(--success-green)';
+            } else {
+                statResult.textContent = 'FAIL (S=0)';
+                statResult.style.color = 'var(--danger-red)';
+                barResultBadge.textContent = 'TEST RESULT: FAIL (S=0)';
+                barResultBadge.style.color = 'var(--danger-red)';
+                barResultBadge.style.borderColor = 'var(--danger-red)';
+            }
+
+            // Position badge
+            const barH = (total / 400) * 100;
+            barResultBadge.style.bottom = `calc(${barH}% + 8px)`;
+        }
+
+        if (sL) sL.addEventListener('input', updateMaskingSim);
+        if (sY) sY.addEventListener('input', updateMaskingSim);
+        if (sM) sM.addEventListener('input', updateMaskingSim);
+        if (sE) sE.addEventListener('input', updateMaskingSim);
+        if (sThresh) sThresh.addEventListener('input', updateMaskingSim);
+        const slProfile = document.getElementById('select-profile');
+        if (slProfile) slProfile.addEventListener('change', updateMaskingSim);
+        updateMaskingSim();
+
+
+        // --- 3. MOD 4.10 MATCH ARRAYS ---
+        const sliderN = document.getElementById('slider-n');
+        const sliderM = document.getElementById('slider-distractors');
+        const sliderW = document.getElementById('slider-w');
+        const valN = document.getElementById('val-n');
+        const valM = document.getElementById('val-distractors');
+        const valW = document.getElementById('val-w');
+        const statCascade = document.getElementById('stat-cascade-p');
+        const statPerfect = document.getElementById('stat-perfect-p');
+        const statPolluted = document.getElementById('stat-polluted-p');
+        const cardCascade = document.getElementById('card-cascade');
+        const cardPerfect = document.getElementById('card-perfect');
+        const btnCascade = document.getElementById('btn-cascade');
+        const btnPerfect = document.getElementById('btn-perfect');
+        const chartTitle = document.getElementById('chart-title');
+        const canvas = document.getElementById('mathChart');
+        const ctxMath = canvas.getContext('2d');
+        const tooltip = document.getElementById('chartTooltip');
+
+        let matchState = { n: 10, m: 2, w: 1.0, v: 0.5, mode: 'cascade' };
+
+        function setMatchMode(m) {
+            matchState.mode = m;
+            if (m === 'cascade') {
+                btnCascade.classList.add('active'); btnPerfect.classList.remove('active');
+                cardCascade.classList.add('active'); cardPerfect.classList.remove('active');
+                chartTitle.textContent = "Curvature Matrix: Weighted P(Cascade Risk)";
+            } else {
+                btnPerfect.classList.add('active'); btnCascade.classList.remove('active');
+                cardPerfect.classList.add('active'); cardCascade.classList.remove('active');
+                chartTitle.textContent = "Markov Matrix: Perfect vs Polluted";
+            }
+            updateMatch();
+        }
+
+        function P_cascade(n, m, w) { if (n <= 1) return 0; const t = (n - 1) + w * m; return t === 0 ? 0 : (n - 1) / t; }
+        function dP_cascade(n, m, w) { if (n <= 1) return 0; return (w * m) / Math.pow(n - 1 + w * m, 2); }
+        function P_elim_perf(n, k, m, w, v) {
+            const decayW = w * (1 + v * (k / n));
+            return 1 / (n - k + 1 + decayW * m);
+        }
+        function P_elim_poll(n, k, m, w, v) {
+            if (k === 1) return P_elim_perf(n, k, m, w, v);
+            const decayW = w * (1 + v * (k / n));
+            const prevDecayW = w * (1 + v * ((k - 1) / n));
+            const W = (n - 1) + prevDecayW * m; if (W === 0) return 0;
+            const pD = (prevDecayW * m) / W; const pO = Math.max(0, n - 2) / W;
+            return (pD * (1 / (n - k + 1 + decayW * Math.max(0, m - 1)))) + (pO * (1 / (n - k + decayW * m)));
+        }
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+            ctxMath.scale(dpr, dpr);
+            drawChart();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function updateMatch() {
+            matchState.n = parseInt(sliderN.value);
+            matchState.m = parseInt(sliderM.value);
+            matchState.w = parseFloat(sliderW.value);
+            const slV = document.getElementById('slider-v');
+            if (slV) matchState.v = parseFloat(slV.value);
+            const valV = document.getElementById('val-v');
+            if (valV) valV.textContent = matchState.v.toFixed(1);
+
+            valN.textContent = matchState.n; valM.textContent = matchState.m; valW.textContent = matchState.w.toFixed(1) + 'x';
+
+            statCascade.textContent = (P_cascade(matchState.n, matchState.m, matchState.w) * 100).toFixed(1) + '%';
+            statPerfect.textContent = (P_elim_perf(matchState.n, matchState.n, matchState.m, matchState.w, matchState.v) * 100).toFixed(1) + '%';
+            statPolluted.textContent = (P_elim_poll(matchState.n, matchState.n, matchState.m, matchState.w, matchState.v) * 100).toFixed(1) + '%';
+            if (document.getElementById('sec-4-10').classList.contains('active')) drawChart();
+        }
+
+        function drawChart() {
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+            ctxMath.clearRect(0, 0, width, height);
+
+            const p = { t: 30, r: 30, b: 40, l: 50 };
+            const gW = width - p.l - p.r; const gH = height - p.t - p.b;
+            let nMin = matchState.mode === 'cascade' ? 2 : 1;
+            let nMax = matchState.mode === 'cascade' ? parseInt(sliderN.max) : matchState.n;
+            let nRange = Math.max(1, nMax - nMin);
+
+            // Axes (Sketch Style = Solid Black)
+            ctxMath.beginPath(); ctxMath.strokeStyle = '#1c1917'; ctxMath.lineWidth = 3;
+            ctxMath.moveTo(p.l, p.t); ctxMath.lineTo(p.l, height - p.b); ctxMath.lineTo(width - p.r, height - p.b); ctxMath.stroke();
+
+            ctxMath.fillStyle = '#1c1917'; ctxMath.font = '800 12px "JetBrains Mono"'; ctxMath.textAlign = 'right'; ctxMath.textBaseline = 'middle';
+            for (let i = 0; i <= 5; i++) {
+                const y = p.t + gH - ((i * 20) / 100 * gH);
+                ctxMath.beginPath(); ctxMath.strokeStyle = 'rgba(28,25,23,0.1)'; ctxMath.lineWidth = 2;
+                ctxMath.moveTo(p.l, y); ctxMath.lineTo(width - p.r, y); ctxMath.stroke();
+                ctxMath.fillText((i * 20) + '%', p.l - 10, y);
+            }
+
+            ctxMath.textAlign = 'center'; ctxMath.textBaseline = 'top';
+            for (let i = nMin; i <= nMax; i += (matchState.mode === 'cascade' ? 2 : 1)) {
+                if (matchState.mode === 'perfect' && nRange > 12 && i % 2 !== 0 && i !== nMin && i !== nMax) continue;
+                ctxMath.fillText(i, p.l + ((i - nMin) / nRange) * gW, height - p.b + 10);
+            }
+
+            // Curves
+            ctxMath.beginPath(); ctxMath.lineWidth = 3;
+            if (matchState.mode === 'cascade') {
+                ctxMath.setLineDash([8, 8]); ctxMath.strokeStyle = '#ea580c'; // sketch orange dashed
+                for (let cX = nMin; cX <= nMax; cX++) {
+                    const y = p.t + gH - (dP_cascade(cX, matchState.m, matchState.w) * gH);
+                    const x = p.l + ((cX - nMin) / nRange) * gW;
+                    if (cX === nMin) ctxMath.moveTo(x, y); else ctxMath.lineTo(x, y);
+                }
+                ctxMath.stroke(); ctxMath.setLineDash([]);
+            } else {
+                ctxMath.strokeStyle = '#ea580c'; // sketch orange
+                for (let cX = nMin; cX <= nMax; cX++) {
+                    const y = p.t + gH - (P_elim_poll(matchState.n, cX, matchState.m, matchState.w, matchState.v) * gH);
+                    const x = p.l + ((cX - nMin) / nRange) * gW;
+                    if (cX === nMin) ctxMath.moveTo(x, y); else ctxMath.lineTo(x, y);
+                }
+                ctxMath.stroke();
+            }
+
+            ctxMath.beginPath(); ctxMath.lineWidth = 4;
+            ctxMath.strokeStyle = '#1c1917'; // sketch thick black
+            for (let cX = nMin; cX <= nMax; cX++) {
+                let val = matchState.mode === 'cascade' ? P_cascade(cX, matchState.m, matchState.w) : P_elim_perf(matchState.n, cX, matchState.m, matchState.w, matchState.v);
+                const y = p.t + gH - (val * gH);
+                const x = p.l + ((cX - nMin) / nRange) * gW;
+                if (cX === nMin) ctxMath.moveTo(x, y); else ctxMath.lineTo(x, y);
+            }
+            ctxMath.stroke();
+
+            // CALCULATE ACTIVE NODE
+            let activePRaw = 0, activeSecRaw = 0, activeX = 0;
+            if (matchState.mode === 'cascade') {
+                activePRaw = P_cascade(matchState.n, matchState.m, matchState.w);
+                activeSecRaw = dP_cascade(matchState.n, matchState.m, matchState.w);
+                activeX = p.l + ((matchState.n - nMin) / nRange) * gW;
+            } else {
+                activePRaw = P_elim_perf(matchState.n, matchState.n, matchState.m, matchState.w, matchState.v);
+                activeSecRaw = P_elim_poll(matchState.n, matchState.n, matchState.m, matchState.w, matchState.v);
+                activeX = p.l + gW;
+            }
+
+            const activeY = p.t + gH - (activePRaw * gH);
+            const activeSecY = p.t + gH - (activeSecRaw * gH);
+
+            // Draw line to axes for points
+            ctxMath.beginPath(); ctxMath.setLineDash([5, 5]); ctxMath.strokeStyle = 'rgba(28,25,23,0.4)';
+            ctxMath.moveTo(activeX, activeY); ctxMath.lineTo(activeX, height - p.b);
+            ctxMath.moveTo(activeX, activeY); ctxMath.lineTo(p.l, activeY);
+            ctxMath.moveTo(activeX, activeSecY); ctxMath.lineTo(p.l, activeSecY);
+            ctxMath.stroke(); ctxMath.setLineDash([]);
+
+            // Draw Nodes
+            ctxMath.beginPath(); ctxMath.arc(activeX, activeY, 7, 0, Math.PI * 2);
+            ctxMath.fillStyle = '#fff'; ctxMath.fill();
+            ctxMath.lineWidth = 3; ctxMath.strokeStyle = '#1c1917'; ctxMath.stroke();
+
+            ctxMath.beginPath(); ctxMath.arc(activeX, activeSecY, 5, 0, Math.PI * 2);
+            ctxMath.fillStyle = '#fff'; ctxMath.fill();
+            ctxMath.lineWidth = 2.5; ctxMath.strokeStyle = '#ea580c'; ctxMath.stroke();
+
+            // Update Tooltip
+            tooltip.style.opacity = '1';
+            let formattedTitle = '';
+            if (matchState.mode === 'cascade') {
+                tooltip.innerHTML = `P = ${(activePRaw * 100).toFixed(1)}%<br>` +
+                    `<span style="color: #ea580c;">Δ = +${(activeSecRaw * 100).toFixed(2)}%</span><br>` +
+                    `n=${matchState.n}, m=${matchState.m}<br>w=${matchState.w.toFixed(1)}x`;
+            } else {
+                tooltip.innerHTML = `Perf = ${(activePRaw * 100).toFixed(1)}%<br>` +
+                    `<span style="color: #ea580c;">E₁ = ${(activeSecRaw * 100).toFixed(1)}%</span><br>` +
+                    `k=${matchState.n}, m=${matchState.m}<br>w=${matchState.w.toFixed(1)}x`;
+            }
+            tooltip.style.left = `${activeX}px`;
+            tooltip.style.top = `${Math.min(activeY, activeSecY) - 15}px`;
+        }
+        sliderN.addEventListener('input', updateMatch); sliderM.addEventListener('input', updateMatch); sliderW.addEventListener('input', updateMatch);
+        const inputV = document.getElementById('slider-v'); if (inputV) inputV.addEventListener('input', updateMatch);
+        setTimeout(() => { resizeCanvas(); updateMatch(); }, 150);
+
+
+        // --- 4. MOD 4.11 ALGORITHMIC FUSION ---
+        const btnAddAlgo = document.getElementById('btn-add-algo');
+        const algoContainer = document.getElementById('algo-container');
+        const valGlobalProd = document.getElementById('val-global-product');
+        const toggleMomentum = document.getElementById('toggle-momentum');
+        const formulaDomino = document.getElementById('formula-domino');
+
+        let operations = []; // Populated via setPersona
+
+        const extraStepNames = [
+            "Delete Redundant Subject",
+            "Resolve Copula Shift",
+            "Fix Punctuation Boundary",
+            "Morphological Polish"
+        ];
+        let extraStepIdx = 0;
+
+        function updateAlgo() {
+            algoContainer.innerHTML = '';
+            let product = 1.0;
+            const useMomentum = toggleMomentum.checked;
+
+            const sldMu = document.getElementById('slider-mu'); const valMu = document.getElementById('val-mu');
+            const sldTau = document.getElementById('slider-tau'); const valTau = document.getElementById('val-tau');
+            const mu = sldMu ? parseFloat(sldMu.value) : 0.5;
+            if (valMu) valMu.textContent = mu.toFixed(1);
+            const tau = sldTau ? parseFloat(sldTau.value) : 0.1;
+            if (valTau) valTau.textContent = tau.toFixed(2);
+
+            operations.forEach((op, index) => {
+                let effProb = op.prob;
+                if (useMomentum) {
+                    effProb = op.prob * (1 + mu * index * Math.exp(-tau * index));
+                    effProb = Math.max(0, Math.min(1.0, effProb));
+                }
+                product *= effProb;
+
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'algo-step';
+
+                let origBadge = '';
+                if (useMomentum && index > 0) {
+                    origBadge = `<span style="font-size:0.65rem; text-decoration:line-through; margin-right:0.5rem; color:var(--ink-light);">${(op.prob * 100).toFixed(0)}%</span>`;
+                }
+
+                stepDiv.innerHTML = `
+                    <div class="algo-step-header">
+                        <span style="display:flex; flex-direction:column; gap:0.25rem;">
+                            <span style="font-size: 0.75rem; color: var(--ink-light);">Step O<sub style="font-size:0.6rem;">${index + 1}</sub></span>
+                            <span><span class="persona-label-inject">${PERSONAS[activePersona] ? PERSONAS[activePersona].name : 'Student'}'s</span> Chance to <span style="text-transform: none; font-weight:600;">${op.name}</span></span>
+                        </span>
+                        <span style="color:var(--accent-orange); align-self: flex-end;">${origBadge}${(effProb * 100).toFixed(0)}%</span>
+                    </div>
+                    <input type="range" class="algo-slider" data-index="${index}" min="0.1" max="1.0" step="0.05" value="${op.prob}">
+                `;
+                algoContainer.appendChild(stepDiv);
+            });
+
+            if (useMomentum) {
+                formulaDomino.innerHTML = `$$ \\mathbb{P}(O_i | O_{i-1}) = \\min(1, \\mathbb{P}(O_i) \\cdot (1 + \\mu i e^{-\\tau i})) $$ <br> $$ \\mathbb{P}(\\text{Total}) = \\prod \\mathbb{P}(O_i | O_{i-1}) $$`;
+            } else {
+                formulaDomino.innerHTML = `$$ \\mathbb{P}(\\text{Total}) = \\prod_{i=1}^{m} \\mathbb{P}(O_i) $$`;
+            }
+            if (window.renderMathInElement) window.renderMathInElement(formulaDomino, { delimiters: [{ left: '$$', right: '$$', display: true }] });
+
+            document.querySelectorAll('.algo-slider').forEach(sli => {
+                sli.addEventListener('input', (e) => {
+                    const idx = parseInt(e.target.getAttribute('data-index'));
+                    operations[idx].prob = parseFloat(e.target.value);
+                    updateAlgo();
+                });
+            });
+
+            valGlobalProd.textContent = (product * 100).toFixed(1) + '%';
+
+            // Change color depending on crash
+            if (product > 0.7) valGlobalProd.className = 'value success';
+            else if (product > 0.4) valGlobalProd.className = 'value warning';
+            else valGlobalProd.className = 'value danger';
+        }
+
+        btnAddAlgo.addEventListener('click', () => {
+            if (operations.length < 8) {
+                const name = extraStepNames[extraStepIdx % extraStepNames.length];
+                extraStepIdx++;
+                operations.push({ name: name, prob: 0.85 });
+                updateAlgo();
+            }
+        });
+        toggleMomentum.addEventListener('change', updateAlgo);
+        const slMu = document.getElementById('slider-mu'); if (slMu) slMu.addEventListener('input', updateAlgo);
+        const slTau = document.getElementById('slider-tau'); if (slTau) slTau.addEventListener('input', updateAlgo);
+        updateAlgo();
+
+        // 5. INIT PERSONAS
+        setPersona('emma');
+
+        // ===== 11. MASTERCLASS RENDER ENGINE =====
+        const SLIDE_DATA = {
+            'sec-4-8': {
+                sectionTag: 'Section 4.8 / Word Changes',
+                slides: [
+                    {
+                        number: 3,
+                        title: 'Morphological Metamorphosis',
+                        time: '4 min',
+                        image: 'slide3.png',
+                        anchor: 'Researchers (1) ________ to convince that a drug they (2) ________ to test...',
+                        anchorLabel: 'Slide Anchor (Text)',
+                        annotations: [
+                            { x: 50, y: 88, role: 'stimulus', label: 'ROOT WORD', text: 'try', color: 'orange', delay: 0 },
+                            { x: 18, y: 30, role: 'response', label: 'BRANCH →', text: 'tried', color: 'white', delay: 120 },
+                            { x: 50, y: 18, role: 'response', label: 'BRANCH →', text: 'trying', color: 'white', delay: 200 }
+                        ],
+                        script: 'Let us examine our first mechanical paradigm: constructing items involving the changing of words. The concrete example anchored on the projection highlights a traditional method for assessing a learner\'s mastery of verb tenses and morphological forms within a continuous text.\n\nThe excerpt reads: "Researchers (1) blank to convince that a drug they (2) blank to test..." In this format, the learner is provided with a base verb—perhaps \'try\' or \'prepare\'—and must manipulate its morphological structure to fit the linguistic environment. This is an evaluation of the learner\'s grammatical expectancy. To successfully complete the first blank, the learner must scan the environment, recognize the plural subject "Researchers," deduce the temporal context of the narrative, and apply the appropriate aspectual markers.\n\nThe visual of the sprouting seed represents this lexical expansion. The root word contains the core semantic DNA, but the syntactic environment dictates how that root must grow. By embedding these items within a continuous paragraph rather than isolating them in discrete sentences, we preserve the authenticity of the reading process.'
+                    },
+                    {
+                        number: 4,
+                        title: 'Grammatical Metaphors and Nominalization',
+                        time: '4.5 min',
+                        image: 'slide4.png',
+                        anchor: '(2. memorise)  →  (3. inform)  →  (4. notice)',
+                        anchorLabel: 'Derivation Sequence',
+                        annotations: [
+                            { x: 14, y: 60, role: 'stimulus', label: 'INPUT — FLUID VERB', text: 'inform / memorise', color: 'white', delay: 0 },
+                            { x: 82, y: 65, role: 'response', label: 'OUTPUT — SOLID NOUN', text: 'information / memorisation', color: 'orange', delay: 200 },
+                            { x: 52, y: 30, role: 'label', label: 'PRESS', text: 'Nominalization', color: 'white', delay: 350 }
+                        ],
+                        script: 'Further down in the same source text, the derivational demands intensify. The learner encounters the base words "memorise," "inform," and "notice" embedded within a dense academic passage discussing memory tests. The text requires the learner to generate "memorisation," "information," and "noticeable" respectively.\n\nThis specific sequence evaluates the learner\'s mastery of nominalization. Nominalization is a grammatical metaphor. It is highly prevalent in academic and scientific registers, where verbs and adjectives are repackaged as nouns to condense information and remove personal pronouns, effectively separating spoken language from written academic discourse.\n\nWhen a learner transforms "inform" into "information," a process of syntactic packaging occurs. The visual of the press machine solidifying fluid shapes perfectly encapsulates this concept. An active, fluid verb is stamped into a solid, abstract noun block.'
+                    },
+                    {
+                        number: 5,
+                        title: 'The Psychometrics of Subjectivity',
+                        time: '3 min',
+                        image: 'slide5.png',
+                        anchor: 'memorise  →  memorisation  OR  memorising?',
+                        anchorLabel: 'Scoring Dilemma',
+                        annotations: [
+                            { x: 22, y: 58, role: 'stimulus', label: 'LEFT PAN', text: 'memorising', color: 'white', delay: 0 },
+                            { x: 78, y: 52, role: 'response', label: 'RIGHT PAN', text: 'memorisation', color: 'orange', delay: 180 },
+                            { x: 50, y: 12, role: 'label', label: 'VERDICT', text: 'Both are valid', color: 'white', delay: 320 }
+                        ],
+                        script: 'While word-building items are psychometrically powerful, a caveat must be issued to all test constructors. Subjectivity inherently creeps into the scoring process whenever we demand language production rather than mere recognition.\n\nIf a learner writes "memorizing" instead of "memorisation" for the blank corresponding to the root "memorise," how do we score it? Both function syntactically as nouns in the gerundial or derived sense. Both fulfill the semantic requirement of the sentence. Scoring rubrics must be rigorously designed to anticipate these variations, ensuring that any acceptable and appropriate form of the target language is rewarded.\n\nThe balance scale visual illustrates this equilibrium. We must be willing to accept multiple correct weights—or answers—provided they balance the syntactic equation. If our rubrics are too rigid, we penalize creative, accurate language use simply because it deviated from the examiner\'s predetermined key. This degrades the validity of the assessment and punishes true communicative competence.'
+                    }
+                ]
+            },
+            'sec-4-9': {
+                sectionTag: 'Section 4.9 / Broken Sentences',
+                slides: [
+                    {
+                        number: 6,
+                        title: 'The Broken Sentence Paradigm',
+                        time: '4 min',
+                        image: 'slide6.png',
+                        anchor: 'Take / drugs and stimulants / keep awake / while revise examination / often be very harmful.',
+                        anchorLabel: 'Fragmented Stimulus',
+                        annotations: [
+                            { x: 50, y: 45, role: 'stimulus', label: 'CENTER — BEFORE', text: 'Shattered syntax', color: 'orange', delay: 0 },
+                            { x: 10, y: 18, role: 'label', label: 'FRAGMENT 1', text: 'Take /\ndrugs and stimulants', color: 'white', delay: 100 },
+                            { x: 88, y: 22, role: 'label', label: 'FRAGMENT 2', text: 'keep awake /\nwhile revise', color: 'white', delay: 200 },
+                            { x: 18, y: 80, role: 'label', label: 'FRAGMENT 3', text: 'often be\nvery harmful', color: 'white', delay: 300 },
+                            { x: 82, y: 80, role: 'response', label: 'AFTER FUSION', text: 'Taking drugs... can often be very harmful.', color: 'orange', delay: 400 }
+                        ],
+                        script: 'We now progress to Section 4.9: constructing \'broken sentence\' items. The visual of the shattered vase hovering in mid-air captures the precise cognitive state of the learner upon encountering this item type. The raw materials are present, but the structural integrity has been obliterated.\n\nThe concrete anchor reads: "Take / drugs and stimulants / keep awake / while revise examination / often be very harmful." The learner\'s task is to synthesize these fragmented lexical chunks into a grammatically flawless, cohesive sentence. This might result in: "Taking drugs and stimulants to keep awake while revising for an examination can often be very harmful."\n\nThis item type is a formidable assessment tool because it refuses to isolate a single grammatical variable. Instead, it tests several areas of the language simultaneously. The learner must generate gerunds like "Taking", supply missing prepositions like "for", introduce infinitives of purpose like "to keep", and modulate the verb phrase to "can often be". Consequently, this task closely mirrors the dynamic, parallel processing required in actual language production.'
+                    },
+                    {
+                        number: 7,
+                        title: 'Navigating Syntactic Labyrinths',
+                        time: '3.5 min',
+                        image: 'slide7.png',
+                        anchor: 'There / be / limit / degree and span / concentration / which you be capable / exert.',
+                        anchorLabel: 'Complex Fragment',
+                        annotations: [
+                            { x: 50, y: 96, role: 'stimulus', label: 'ENTRY — LEARNER', text: 'Broken input', color: 'orange', delay: 0 },
+                            { x: 50, y: 45, role: 'response', label: 'CENTER — GOAL', text: 'Correct sentence', color: 'white', delay: 200 },
+                            { x: 12, y: 55, role: 'label', label: 'DEAD END', text: 'Wrong parse', color: 'white', delay: 350 }
+                        ],
+                        script: 'Continuing with the broken sentence paradigm, consider the subsequent example: "There / be / limit / degree and span / concentration / which you be capable / exert."\n\nTo navigate this syntactic labyrinth, the learner must rely heavily on the Gestalt theory of closure—the psychological principle where the human brain subconsciously closes gaps in patterns to perceive a complete whole. The learner must possess an internalized \'grammar of expectancy\' to anticipate that "capable" mandates the preposition "of," which subsequently forces "exert" into the gerundial form "exerting."\n\nHowever, the high cognitive load inherent in this task introduces a significant risk of test invalidity if the rubric is poorly constructed. A critical failure occurs when learners misunderstand the visual prompt. Students unfamiliar with this format frequently assume that the oblique stroke indicates the omission of a single word, rather than signaling a fragmented sentence.'
+                    },
+                    {
+                        number: 8,
+                        title: 'The Oblique Stroke Dilemma',
+                        time: '3 min',
+                        image: 'slide8.png',
+                        anchor: null,
+                        anchorLabel: null,
+                        annotations: [
+                            { x: 50, y: 48, role: 'stimulus', label: 'THE SYMBOL', text: '/', color: 'orange', delay: 0 },
+                            { x: 18, y: 30, role: 'label', label: 'WRONG READ', text: 'Fill one word only', color: 'white', delay: 180 },
+                            { x: 82, y: 30, role: 'response', label: 'CORRECT READ', text: 'Rewrite entire fragment', color: 'white', delay: 320 }
+                        ],
+                        script: 'We must pause to address the typographical mechanics of this item type. The oblique stroke itself is fraught with danger. When evaluating testing methodology, we must always separate construct-relevant variance—actual language ability—from construct-irrelevant variance—confusion caused by the test format itself.\n\nIf a student has previously encountered cloze tests where a slash denotes a missing article or preposition, they will attempt to solve the broken sentence item by merely squeezing single words between the slashes. They will fail the item entirely, not because their English is deficient, but because our graphic design was ambiguous.\n\nThis underscores a vital principle in objective testing: the format must never be the hurdle. Our role as presentation coaches and information designers demands that clarity supersedes cleverness. Always include a fully resolved example in the rubric. Ensure the testee knows they have the freedom to add articles, prepositions, conjugate verbs, and fundamentally alter the raw material provided.'
+                    }
+                ]
+            },
+            'sec-4-10': {
+                sectionTag: 'Section 4.10 / Matching Tasks',
+                slides: [
+                    {
+                        number: 9,
+                        title: 'The Discourse Bridge',
+                        time: '3.5 min',
+                        image: 'slide9.png',
+                        anchor: 'Going to see a film tonight?  →  F. Yes, I probably will.',
+                        anchorLabel: 'Stimulus–Response Pair',
+                        annotations: [
+                            { x: 62, y: 45, role: 'stimulus', label: 'THE LOCK — STIMULUS', text: 'Going to see\na film tonight?', color: 'white', delay: 0 },
+                            { x: 20, y: 62, role: 'response', label: 'THE KEY — RESPONSE', text: 'F. Yes, I\nprobably will.', color: 'orange', delay: 220 }
+                        ],
+                        script: 'The discourse now shifts to Section 4.10, which explores the construction of pairing and matching items. Visually represented by the lock and key, these items are designed to test the learner\'s ability to select appropriate responses to conversational stimuli.\n\nThe concrete anchor demonstrates a classic pairing: the stimulus "Going to see a film tonight?" is matched with the response "Yes, I probably will." Unlike the previous items that heavily prioritized syntactic accuracy and morphological derivation, the matching item prioritizes sensitivity to appropriacy and functional language awareness. It is an assessment of discourse competence.\n\nThis represents a pivot toward the communicative approach to language testing. Communicative tests prioritize how language is used to achieve meaning over the mere mastery of formal usage. By requiring learners to navigate conventional greetings, apologies, and polite disagreements, we attempt to bridge the gap between the sterile testing hall and the vibrant, unpredictable nature of real-world interaction.'
+                    },
+                    {
+                        number: 10,
+                        title: 'The Illusion of Authentic Discourse',
+                        time: '4 min',
+                        image: 'slide10.png',
+                        anchor: 'I can\'t stand war films, can you?  \u2192  K. Not really. I quite like them.',
+                        anchorLabel: 'Contrastive Pair',
+                        annotations: [
+                            { x: 24, y: 55, role: 'stimulus', label: 'COMEDY MASK — SPEAKER A', text: 'I can\'t stand\nwar films, can you?', color: 'white', delay: 0 },
+                            { x: 76, y: 55, role: 'response', label: 'TRAGEDY MASK — SPEAKER K', text: 'Not really.\nI quite like them.', color: 'orange', delay: 250 },
+                            { x: 50, y: 88, role: 'label', label: 'FORMAT TRAP', text: 'Scripted, not authentic', color: 'white', delay: 420 }
+                        ],
+                        script: 'While pairing and matching items attempt to simulate authentic discourse, they are ultimately bound by the constraints of their format. Consider the next anchor: "I can\'t stand war films, can you?" mapped to the response "Not really. I quite like them."\n\nAlthough grammatical clues—such as recognizing the contrastive function of "Not really"—aid the learner in completing the item satisfactorily, the interaction remains a rigid simulation. The essential elements of genuine constructive interplay, unpredictable stimuli, hesitation phenomena, and spontaneous grammatical repatterning are entirely absent. The learner is essentially reading a script. The masks are empty.\n\nFurthermore, test constructors face a mathematical dilemma when designing the distractors for these columns. If Column 1 contains ten stimuli and Column 2 contains exactly ten responses, the item suffers from a cascading error effect; one incorrect match guarantees a second incorrect match.'
+                    },
+                    {
+                        number: 11,
+                        title: 'Preventing the Cascading Error',
+                        time: '2.5 min',
+                        image: 'slide11.png',
+                        anchor: 'Stimuli: 10 items.  |  Responses: 13 items.',
+                        anchorLabel: 'Design Prescription',
+                        annotations: [
+                            { x: 72, y: 60, role: 'stimulus', label: 'HAND — TEST DESIGNER', text: 'Removes\none domino', color: 'orange', delay: 0 },
+                            { x: 20, y: 72, role: 'label', label: 'FALLING — CASCADE', text: 'Error propagates', color: 'white', delay: 180 },
+                            { x: 88, y: 50, role: 'response', label: 'STANDING — SURPLUS', text: '+3 extra options', color: 'white', delay: 330 }
+                        ],
+                        script: 'Let us dwell on that statistical dilemma for just a moment longer. The cascading error effect is the silent killer of test reliability in matching formats.\n\nIf a student misinterprets a single functional cue—perhaps confusing a response to "How was the film?" with "Why didn\'t you come to the film?"—they steal the correct answer for a subsequent question. This means the penalty for a single cognitive error is doubled. The assessment instrument is no longer measuring their language proficiency; it is measuring their compounding mathematical misfortune.\n\nBy providing a surplus of options—as represented by halting the falling dominoes—we restore psychometric integrity to the item. The learner is forced to evaluate every single response on its linguistic merits, rather than arriving at the final answer through the simple process of elimination.'
+                    }
+                ]
+            },
+            'sec-4-11': {
+                sectionTag: 'Section 4.11 / Combining Sentences',
+                slides: [
+                    {
+                        number: 12,
+                        title: 'Syntactic Fusion and Mechanics',
+                        time: '3.5 min',
+                        image: 'slide12.png',
+                        anchor: 'Box 1: You finish the paper. Then check your answers carefully. (AFTER)\nBox 2: Have you answered all the questions? (YET)',
+                        anchorLabel: 'Combination / Addition Items',
+                        annotations: [
+                            { x: 12, y: 60, role: 'stimulus', label: 'CHAIN A — SENTENCE 1', text: 'You finish the paper.\nThen check answers.', color: 'white', delay: 0 },
+                            { x: 50, y: 22, role: 'label', label: 'CLAMP — CONJUNCTION', text: 'AFTER', color: 'orange', delay: 180 },
+                            { x: 88, y: 40, role: 'response', label: 'CHAIN B — FUSED', text: 'After you finish,\ncheck answers.', color: 'white', delay: 330 }
+                        ],
+                        script: 'We move now to Section 4.11: combination and addition items. As visually depicted by the forcing together of iron chains, these objective items test a learner\'s ability to mechanically manipulate and fuse independent syntactic units.\n\nObserve the first concrete anchor: "You finish the paper. Then check your answers carefully." The prompt provides the subordinating conjunction "(AFTER)". The learner must execute a mechanical transformation to produce: "After you finish the paper, check your answers carefully." The second anchor demonstrates an addition item: "Have you answered all the questions?" with the prompt "(YET)", requiring the insertion of the adverb into its rigid syntactic slot at the end of the interrogative phrase.\n\nThese items trace their lineage directly back to the structuralist era. They test pure grammatical mechanics. There is virtually no communicative intent required to solve them. The learner does not need to consider pragmatics; they simply need to apply a mathematical algorithm to the sentence structure. It is a test of structural habit.'
+                    },
+                    {
+                        number: 13,
+                        title: 'The Mechanical Tie',
+                        time: '3.5 min',
+                        image: 'slide13.png',
+                        anchor: 'Some questions may be very difficult. They should be left until later. (WHICH)',
+                        anchorLabel: 'Relative Clause Combination',
+                        annotations: [
+                            { x: 25, y: 30, role: 'stimulus', label: 'ROPE A — MAIN CLAUSE', text: 'Some questions\nshould be left...', color: 'white', delay: 0 },
+                            { x: 50, y: 55, role: 'label', label: 'THE KNOT', text: 'WHICH', color: 'orange', delay: 200 },
+                            { x: 75, y: 30, role: 'response', label: 'ROPE B — SUB-CLAUSE', text: '...which may be\nvery difficult', color: 'white', delay: 360 }
+                        ],
+                        script: 'Delving deeper into combination items, the anchor provided states: "Some questions may be very difficult. They should be left until later. (WHICH)." Here, the learner is tasked with generating a relative clause, yielding: "Some questions, which may be very difficult, should be left until later."\n\nThe knot in the visual metaphor represents this relative pronoun. It acts as the mechanical tie binding the main clause to the subordinate clause. While this effectively measures the learner\'s knowledge of syntactic hierarchy and anaphoric reference, the foundational literature offers a stark warning regarding this methodology.\n\nThese objective-type items involve largely robotic responses. Because the separate sentences are only loosely linked by theme, the items lack the rich contextualization required for authentic language processing. Decontextualized items operate in a vacuum, conveying the false impression that language can be mastered free of any situational context. Therefore, test constructors are advised to use combination and addition items exceedingly sparingly.'
+                    }
+                ]
+            }
+        };
+
+        let mcCurrentSlideIdx = 0;
+        let mcData = null;
+
+        function openDrawer(sectionId) {
+            originSectionId = currentActiveSectionId; // Save where we came from
+            mcData = SLIDE_DATA[sectionId];
+            if (!mcData) return;
+
+            // Update UI text
+            document.getElementById('mc-tag').textContent = mcData.sectionTag;
+
+            // Show Masterclass section in main content
+            showSection('sec-masterclass');
+
+            // Clear sidebar highlights for presentation mode
+            navItems.forEach(nav => nav.classList.remove('active'));
+
+            renderMCSlides(mcData);
+            goToSlide(0);
+        }
+
+        function closeDrawer() {
+            showSection(originSectionId);
+        }
+
+        function goToSlide(idx) {
+            if (!mcData) return;
+            const slides = document.querySelectorAll('.kb-mc-slide');
+            const pilles = document.querySelectorAll('.kb-mc-pill');
+
+            if (idx < 0 || idx >= slides.length) return;
+
+            mcCurrentSlideIdx = idx;
+
+            // Update DOM
+            slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+            pilles.forEach((p, i) => p.classList.toggle('active', i === idx));
+
+            // Update Buttons
+            document.getElementById('mc-prev-btn').disabled = (idx === 0);
+            document.getElementById('mc-next-btn').disabled = (idx === slides.length - 1);
+        }
+
+        function renderMCSlides(data) {
+            const containerEl = document.getElementById('mc-carousel');
+            const pillsEl = document.getElementById('mc-pills');
+
+            containerEl.innerHTML = '';
+            pillsEl.innerHTML = '';
+
+            data.slides.forEach((slide, i) => {
+                // Create Pill
+                const pill = document.createElement('div');
+                pill.className = 'kb-mc-pill';
+                pill.onclick = () => goToSlide(i);
+                pill.title = slide.title;
+                pillsEl.appendChild(pill);
+
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'kb-mc-slide' + (i === 0 ? ' active' : '');
+
+                const scriptHTML = slide.script
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/^/, '<p>')
+                    .replace(/$/, '</p>');
+
+                const noteId = `notes-${slide.number}`;
+                const chevId = `chev-${slide.number}`;
+
+                // Build annotation HTML (positioned absolutely on the image)
+                let annHTML = '';
+                if (slide.annotations && slide.annotations.length) {
+                    slide.annotations.forEach(ann => {
+                        const colorClass = ann.color === 'orange' ? 'orange' : (ann.color === 'white' ? 'white' : '');
+                        const style = `left:${ann.x}%;top:${ann.y}%;transform:translate(-50%,-50%);animation-delay:${ann.delay}ms;`;
+                        annHTML += `<div class="kb-ann" style="${style}">
+                            <div class="kb-ann-bubble ${colorClass}">
+                                <span class="kb-ann-label">${ann.label}</span>
+                                <span class="kb-ann-text">${ann.text.replace(/\n/g, '<br>')}</span>
+                            </div>
+                        </div>`;
+                    });
+                }
+
+                slideDiv.innerHTML = `
+                    <div class="kb-mc-slide-hero">
+                        <img src="${slide.image}" alt="${slide.title}" loading="lazy">
+                        <div class="kb-mc-badge-row">
+                            <span class="kb-mc-badge">Slide ${slide.number}: ${slide.title}</span>
+                            <span class="kb-mc-badge accent">&#9201; ${slide.time}</span>
+                        </div>
+                        ${annHTML}
+                    </div>
+                    <div class="kb-mc-notes-section">
+                        <button class="kb-mc-notes-toggle"
+                            onclick="
+                                document.getElementById('${noteId}').classList.toggle('open');
+                                document.getElementById('${chevId}').classList.toggle('open');
+                            ">
+                            <span style="color:var(--accent-orange);font-size:0.75rem;">&#9654;</span>
+                            Konu\u015fma Metni &mdash; Speaker Notes
+                            <span class="kb-mc-notes-chevron" id="${chevId}">&#9660;</span>
+                        </button>
+                        <div class="kb-mc-notes-content" id="${noteId}">${scriptHTML}</div>
+                    </div>
+                `;
+                containerEl.appendChild(slideDiv);
+            });
+        }
+
+        // Global Event Listeners
+        document.getElementById('mc-close-btn').onclick = closeDrawer;
+        document.getElementById('mc-prev-btn').onclick = () => goToSlide(mcCurrentSlideIdx - 1);
+        document.getElementById('mc-next-btn').onclick = () => goToSlide(mcCurrentSlideIdx + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            if (currentActiveSectionId !== 'sec-masterclass') return; // Only if in presentation
+            if (e.key === 'ArrowLeft') goToSlide(mcCurrentSlideIdx - 1);
+            if (e.key === 'ArrowRight') goToSlide(mcCurrentSlideIdx + 1);
+            if (e.key === 'Escape') closeDrawer();
+        });
+
+        // Wire trigger buttons
+        document.querySelectorAll('.kb-mc-trigger[data-section]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sec = btn.getAttribute('data-section');
+                openDrawer(sec);
+            });
+        });
+
+        // Init page
+        setPersona('emma');
+        showSection('sec-4-8');
+
+    </script>
+</body>
+
+</html>
